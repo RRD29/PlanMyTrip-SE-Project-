@@ -1,29 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-// import api from '../../services/api'; // Your Axios instance
+import api from '../../lib/axios'; // Your Axios instance
 import { useAuth } from '../../contexts/AuthContext';
-import { UserIcon } from '../../assets/icons'; // Using the User icon as a placeholder
+import useSocket from '../../hooks/useSocket'; // <-- Import the new hook
+import { UserIcon } from '../../assets/icons'; 
 
-// --- A. Mock API ---
-// This is a temporary mock of your API and auth
-// Remove this and uncomment the real imports above
-const FAKE_DELAY = 500;
-const useAuth = () => ({ user: { _id: 'user_123', fullName: 'Current User' } });
-const api = {
-  get: (url) => new Promise(resolve => setTimeout(() => resolve({
-    data: [
-      { _id: 'msg_1', text: 'Hey! Are you available for the 10th?', sender: { _id: 'user_123', fullName: 'Current User' } },
-      { _id: 'msg_2', text: 'Hi! Yes, I am. What time were you thinking?', sender: { _id: 'guide_456', fullName: 'Local Guide' } },
-      { _id: 'msg_3', text: 'Great! How about 10 AM at the city center?', sender: { _id: 'user_123', fullName: 'Current User' } },
-    ]
-  }), FAKE_DELAY)),
-  post: (url, data) => new Promise(resolve => setTimeout(() => resolve({
-    data: { _id: `msg_${Math.random()}`, ...data, sender: { _id: 'user_123', fullName: 'Current User' } }
-  }), FAKE_DELAY)),
-};
-// --- End Mock API ---
-
-
-// --- B. Helper Components ---
+// --- Helper Components (Keep these the same) ---
 
 // Send Button Icon
 const SendIcon = (props) => (
@@ -41,6 +22,8 @@ const ChatSpinner = () => (
 
 // Message Bubble
 const Message = ({ message, isMe }) => {
+  const senderName = message.sender?.fullName.split(' ')[0] || 'Unknown';
+  
   return (
     <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
       <div className={`flex items-end max-w-xs md:max-w-md ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -50,6 +33,7 @@ const Message = ({ message, isMe }) => {
         </div>
         {/* Bubble */}
         <div className={`p-3 rounded-lg ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
+          {!isMe && <p className="text-xs font-semibold mb-1">{senderName}</p>}
           <p className="text-sm">{message.text}</p>
         </div>
       </div>
@@ -57,7 +41,7 @@ const Message = ({ message, isMe }) => {
   );
 };
 
-// --- C. Main Chat Component ---
+// --- Main Chat Component ---
 
 /**
  * A Chat Window component
@@ -65,90 +49,80 @@ const Message = ({ message, isMe }) => {
  */
 function ChatWindow({ bookingId, guideName = "Guide" }) {
   const { user } = useAuth();
+  const socket = useSocket(); // Get the socket instance
+  
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Auto-scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // 1. Fetch initial messages
+  // 1. Fetch initial messages (REST API)
   useEffect(() => {
     if (!bookingId) return;
     
     setLoading(true);
-    api.get(`/api/v1/chat/${bookingId}`)
+    api.get(`/api/v1/chat/history/${bookingId}`) // New REST endpoint for history
       .then(response => {
-        setMessages(response.data);
+        setMessages(response.data.data || []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-      
-    // TODO: In a real app, you would initialize your WebSocket connection here.
-    // e.g., socket.emit('joinRoom', bookingId);
 
   }, [bookingId]);
   
-  // 2. Listen for new messages (simulated with Socket.io)
+  // 2. Manage Socket connection and listeners
   useEffect(() => {
-    // TODO: This is where you'd listen for incoming messages
-    // const handleReceiveMessage = (message) => {
-    //   if (message.bookingId === bookingId) {
-    //     setMessages(prevMessages => [...prevMessages, message]);
-    //   }
-    // };
-    //
-    // socket.on('receiveMessage', handleReceiveMessage);
-    //
-    // return () => {
-    //   socket.off('receiveMessage', handleReceiveMessage);
-    // };
+    if (!socket || !bookingId) return;
+
+    // A. Join the specific chat room (the booking ID)
+    socket.emit('joinRoom', bookingId);
+
+    // B. Listener for incoming messages
+    const handleReceiveMessage = (message) => {
+      // Ensure the sender isn't the current user (if the server echoes)
+      // and that the message is for the correct room (security check)
+      if (message.booking.toString() === bookingId.toString()) {
+        setMessages(prevMessages => [...prevMessages, message]);
+      }
+    };
+
+    socket.on('receiveMessage', handleReceiveMessage);
     
-  }, [bookingId]);
+    // Cleanup function
+    return () => {
+      socket.off('receiveMessage', handleReceiveMessage);
+      // socket.emit('leaveRoom', bookingId); // Optional
+    };
+  }, [socket, bookingId]);
 
   // 3. Scroll to bottom when new messages are added
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // 4. Handle sending a new message
+  // 4. Handle sending a new message (SOCKET EVENT)
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending) return;
-
-    const optimisticMessage = {
-      _id: `temp_${Date.now()}`,
-      text: newMessage,
-      sender: user, // Use the currently logged-in user
-    };
+    const text = newMessage.trim();
+    if (!text || sending || !socket) return;
 
     setSending(true);
     setNewMessage('');
-    setMessages(prevMessages => [...prevMessages, optimisticMessage]);
-
-    try {
-      const response = await api.post(`/api/v1/chat/${bookingId}`, {
-        text: newMessage,
-      });
-
-      // Replace optimistic message with real one from server
-      setMessages(prev => prev.map(msg => 
-        msg._id === optimisticMessage._id ? response.data : msg
-      ));
-      
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      // Remove optimistic message on failure
-      setMessages(prev => prev.filter(msg => msg._id !== optimisticMessage._id));
-      // Optionally, restore the text to the input
-      // setNewMessage(optimisticMessage.text);
-    } finally {
-      setSending(false);
-    }
+    
+    // --- Send message via Socket ---
+    socket.emit('sendMessage', { 
+      bookingId, 
+      text, 
+    });
+    // The server will save the message and then broadcast it back to all users in the room,
+    // including us, where handleReceiveMessage will update the state.
+    
+    setSending(false);
   };
 
   return (
@@ -187,16 +161,17 @@ function ChatWindow({ bookingId, guideName = "Guide" }) {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 w-full px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={sending}
+            disabled={sending || !socket}
           />
           <button
             type="submit"
             className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
-            disabled={!newMessage.trim() || sending}
+            disabled={!newMessage.trim() || sending || !socket}
           >
             <SendIcon className="w-5 h-5" />
           </button>
         </form>
+        {!socket && <p className="text-center text-xs text-red-500 mt-2">Connecting to chat...</p>}
       </div>
     </div>
   );

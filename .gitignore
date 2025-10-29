@@ -2,14 +2,12 @@
 
 # --- Node.js (Server) ---
 server/node_modules/
-server/.env
 server/npm-debug.log*
 server/build/
 server/dist/
 
 # --- React (Client) ---
 client/node_modules/
-client/.env
 client/build/
 client/npm-debug.log*
 

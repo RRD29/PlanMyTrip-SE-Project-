@@ -2,8 +2,9 @@ import { User } from '../models/user.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import crypto from 'crypto';
+import crypto from 'crypto'; 
 import { sendPasswordResetEmail } from '../services/email.service.js'; 
+// import { sendWelcomeEmail } from '../services/email.service.js'; 
 
 // --- Utility function to generate tokens and set cookie ---
 const generateAccessAndRefreshTokens = async(userId) => {
@@ -22,7 +23,7 @@ const cookieOptions = {
     secure: process.env.NODE_ENV === 'production', 
 };
 
-// --- 1. Register User (UPDATED TO LOGIN) ---
+// --- 1. Register User (UPDATED TO LOG IN IMMEDIATELY) ---
 export const registerUser = asyncHandler(async (req, res) => {
     const { email, password, fullName, role } = req.body;
 
@@ -47,7 +48,7 @@ export const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Something went wrong while registering the user");
     }
 
-    // --- LOG USER IN IMMEDIATELY AFTER REGISTRATION (Fixes the crashing) ---
+    // --- LOG USER IN IMMEDIATELY AFTER REGISTRATION (Fixes the frontend redirect crash) ---
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
     return res
@@ -57,6 +58,7 @@ export const registerUser = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 201, 
+                // The frontend AuthContext expects this structure { user, accessToken, refreshToken }
                 { user: createdUser, accessToken, refreshToken }, 
                 "User registered and logged in successfully"
             )
@@ -128,12 +130,10 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
-    // Send the email with the unhashed token
     try {
         await sendPasswordResetEmail(user.email, resetToken);
         return res.status(200).json(new ApiResponse(200, null, "Password reset link sent to email."));
     } catch (err) {
-        // If email fails, clear the reset token fields from DB
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
         await user.save({ validateBeforeSave: false });

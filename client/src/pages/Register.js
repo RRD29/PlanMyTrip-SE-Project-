@@ -12,7 +12,8 @@ const Register = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   
-  const { register, loading } = useAuth(); // Assuming register provides loading state
+  // Get both register and login functions from AuthContext
+  const { register, login, loading: authLoading } = useAuth(); 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -26,13 +27,28 @@ const Register = () => {
     }
 
     try {
+      // 1. REGISTER the user
       await register(email, password, fullName, role);
-      setMessage('Registration successful! Redirecting to login...');
-      setTimeout(() => navigate('/login'), 2000);
+
+      // 2. LOG IN the user immediately to get the token and update AuthContext
+      // This is crucial because registration doesn't return the token directly.
+      await login(email, password); 
+
+      setMessage('Registration successful! Redirecting to profile setup...');
+
+      // 3. REDIRECT based on the selected role
+      // Guides are sent to their profile edit page to ensure data is filled.
+      const redirectPath = role === 'guide' ? '/dashboard-guide/profile' : '/dashboard'; 
+      
+      setTimeout(() => navigate(redirectPath, { replace: true }), 100);
+
     } catch (err) {
-      setError(err.message || 'Failed to register. This email may already be in use.');
+      const errorMessage = err.message || err.response?.data?.message || 'Failed to register. This email may already be in use.';
+      setError(errorMessage);
     }
   };
+  
+  const loading = authLoading;
 
   return (
     <div
@@ -58,6 +74,7 @@ const Register = () => {
             </p>
           )}
 
+          {/* Full Name Input */}
           <div>
             <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
               Full Name
@@ -71,7 +88,8 @@ const Register = () => {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-
+          
+          {/* Email Input */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email address
@@ -87,6 +105,7 @@ const Register = () => {
             />
           </div>
 
+          {/* Password Input */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
@@ -102,6 +121,7 @@ const Register = () => {
             />
           </div>
           
+          {/* Role Selector */}
           <div>
             <label className="block text-sm font-medium text-gray-700">I am a...</label>
             <div className="mt-2 flex space-x-4">
