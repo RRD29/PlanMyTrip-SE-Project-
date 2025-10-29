@@ -1,26 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import useApi from '../../hooks/useApi';
+import useApi from '../../hooks/useApi'; // <-- NOW USED
 import { PageLoader, SkeletonText } from '../../components/common/Loaders';
 import Button from '../../components/common/Button';
-import { StarIcon, MapPinIcon, CurrencyDollarIcon } from '../../assets/icons'; // From your icon pack
+import { StarIcon, MapPinIcon, CurrencyDollarIcon } from '../../assets/icons'; 
 
-// --- MOCK DATA (Remove when API is ready) ---
-const MOCK_GUIDES = [
-  { _id: 'g1', fullName: 'Bob Johnson', location: 'Paris, France', rating: 4.9, pricePerDay: 250, bio: 'Parisian local, art history expert.', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&q=80' },
-  { _id: 'g2', fullName: 'David Lee', location: 'Tokyo, Japan', rating: 4.8, pricePerDay: 300, bio: 'Food and culture enthusiast in Tokyo.', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80' },
-  { _id: 'g3', fullName: 'Maria Garcia', location: 'Rome, Italy', rating: 5.0, pricePerDay: 280, bio: 'Explore ancient Rome with a passionate historian.', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&q=80' },
-  { _id: 'g4', fullName: 'Ken Tanaka', location: 'Kyoto, Japan', rating: 4.7, pricePerDay: 260, bio: 'Temple tours and hidden gems.', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&q=80' },
-];
-// ---------------------------------------------
-
-// --- Single Guide Card Component ---
+// --- Single Guide Card Component (Keep the same) ---
 const GuideCard = ({ guide }) => {
   const navigate = useNavigate();
+  
+  // Provide defaults for potentially missing fields
+  const displayRating = guide.guideProfile?.rating ? parseFloat(guide.guideProfile.rating).toFixed(1) : 0;
+  const displayPrice = guide.guideProfile?.pricePerDay || 'N/A';
+  const displayLocation = guide.guideProfile?.location || 'Unspecified Location';
+  const displayBio = guide.guideProfile?.bio || 'This guide is still setting up their profile.';
   
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden flex flex-col">
       <div className="flex-shrink-0">
+        {/* Placeholder avatar */}
         <img className="h-48 w-full object-cover" src={guide.avatar} alt={guide.fullName} />
       </div>
       <div className="flex-1 p-6 flex flex-col justify-between">
@@ -29,20 +27,22 @@ const GuideCard = ({ guide }) => {
             <h3 className="text-xl font-semibold text-gray-900">{guide.fullName}</h3>
             <div className="flex items-center space-x-1">
               <StarIcon className="w-5 h-5 text-yellow-400" />
-              <span className="font-semibold text-gray-700">{guide.rating}</span>
+              <span className="font-semibold text-gray-700">{displayRating}</span>
             </div>
           </div>
           <div className="flex items-center mt-2 text-sm text-gray-500">
             <MapPinIcon className="w-4 h-4 mr-1.5" />
-            <span>{guide.location}</span>
+            <span>{displayLocation}</span>
           </div>
-          <p className="mt-3 text-base text-gray-600 line-clamp-2">{guide.bio}</p>
+          <p className="mt-3 text-base text-gray-600 line-clamp-2">{displayBio}</p>
         </div>
         
         <div className="mt-6 flex items-center justify-between">
           <div className="flex items-center">
             <CurrencyDollarIcon className="w-5 h-5 text-green-600" />
-            <span className="ml-1.5 text-xl font-bold text-gray-900">{guide.pricePerDay}</span>
+            <span className="ml-1.5 text-xl font-bold text-gray-900">
+              {displayPrice === 'N/A' ? 'N/A' : `$${displayPrice}`}
+            </span>
             <span className="ml-1 text-sm text-gray-500">/ day</span>
           </div>
           <Button size="md" onClick={() => navigate(`/guide/${guide._id}`)}>
@@ -56,22 +56,25 @@ const GuideCard = ({ guide }) => {
 
 // --- Main Marketplace Page ---
 const GuideMarketplace = () => {
-  // const { data: guides, loading, error } = useApi('/guides'); // Real API
-  const [guides, setGuides] = useState(MOCK_GUIDES);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
+  // --- USING REAL API HERE ---
+  const { data: guides, loading, error } = useApi('/guides'); 
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
 
   // Filter guides based on search and location
   const filteredGuides = useMemo(() => {
-    return (guides || []).filter(guide => {
-      const matchesSearch = guide.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            guide.bio.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesLocation = guide.location.toLowerCase().includes(location.toLowerCase());
-      return matchesSearch && matchesLocation;
-    });
+    // Ensure guides is an array before filtering
+    return (guides || [])
+      // Filter out guides who haven't set a profile (optional, but good for quality)
+      // .filter(guide => guide.guideProfile?.location) 
+      .filter(guide => {
+        const profile = guide.guideProfile || {};
+        const matchesSearch = guide.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              profile.bio?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesLocation = profile.location?.toLowerCase().includes(location.toLowerCase());
+        return matchesSearch && matchesLocation;
+      });
   }, [guides, searchTerm, location]);
 
   if (error) {
@@ -83,7 +86,7 @@ const GuideMarketplace = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-8">Find Your Perfect Guide</h1>
 
-        {/* --- Filter Bar --- */}
+        {/* --- Filter Bar --- (Keep as is) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 p-6 bg-white rounded-lg shadow border">
           <div>
             <label htmlFor="search" className="block text-sm font-medium text-gray-700">Name or Keyword</label>
@@ -122,7 +125,9 @@ const GuideMarketplace = () => {
                 <GuideCard key={guide._id} guide={guide} />
               ))
             ) : (
-              <p className="text-gray-600 md:col-span-3 text-center">No guides found matching your criteria.</p>
+              <p className="text-gray-600 md:col-span-3 text-center">
+                {searchTerm || location ? "No guides found matching your filters." : "No guides have registered yet."}
+              </p>
             )}
           </div>
         )}
