@@ -1,0 +1,29 @@
+/* 1. Import styles for third-party libraries */
+@import 'react-calendar/dist/Calendar.css';
+
+/* 2. Import Tailwind's base, components, and utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3. Add custom global styles or overrides here */
+@layer base {
+  body {
+    @apply antialiased text-gray-800;
+  }
+}
+
+/* 4. Custom classes for react-calendar */
+/* This styles the 'available' dates in the guide's dashboard */
+.react-calendar__tile--available {
+  @apply bg-green-100 text-green-800 rounded-lg;
+}
+
+.react-calendar__tile--available:hover {
+  @apply bg-green-200;
+}
+
+/* Style for dates in the past (disabled) */
+.react-calendar__tile:disabled {
+  @apply bg-gray-100 text-gray-400;
+}
