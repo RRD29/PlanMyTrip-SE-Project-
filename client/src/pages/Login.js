@@ -9,12 +9,17 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const { login, loading } = useAuth(); // Get login function and loading state
+  const { login, loading, user } = useAuth(); // Get login function and loading state
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirect to dashboard or the page they were trying to access
-  const from = location.state?.from?.pathname || '/dashboard';
+  // Redirect to dashboard or the page they were trying to access, based on role
+  const getDefaultRedirect = (userRole) => {
+    if (userRole === 'guide') return '/dashboard-guide';
+    if (userRole === 'admin') return '/dashboard-admin';
+    return '/dashboard';
+  };
+  const from = location.state?.from?.pathname || getDefaultRedirect(user?.role);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

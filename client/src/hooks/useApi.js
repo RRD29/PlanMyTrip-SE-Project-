@@ -49,6 +49,13 @@ const useApi = (initialUrl = null, initialOptions = {}) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // --- Re-fetch when options change ---
+  useEffect(() => {
+    if (url) {
+      fetchData();
+    }
+  }, [options, fetchData]);
+
   // --- Manual request function ---
   // This allows components to trigger a request manually (e.g., on a button click)
   // or re-fetch data.

@@ -13,7 +13,7 @@ export const useAuth = () => {
 
 // 3. Create the Provider component
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUserState] = useState(null);
   const [loading, setLoading] = useState(true); // Loading state for initial auth check
 
   // Check for existing token in localStorage on app load
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         const parsedUser = JSON.parse(storedUser);
         // Set token for all future requests
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        setUser(parsedUser);
+        setUserState(parsedUser);
       } catch (error) {
         console.error("Failed to parse stored user:", error);
         // Clear bad data
@@ -47,18 +47,23 @@ export const AuthProvider = ({ children }) => {
       // 1. Store user and token
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('token', accessToken);
-      
+
       // 2. Set token in default headers
       api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-      
+
       // 3. Update state
-      setUser(user);
-      
+      setUserState(user);
+
       return response;
     } catch (error) {
       console.error("Login failed:", error);
       throw error.response.data || error; // Throw error to be caught by the login form
     }
+  };
+
+  const setUser = (updatedUser) => {
+    setUserState(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
   const register = async (email, password, fullName, role) => {
@@ -73,12 +78,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     // 1. Clear user from state
-    setUser(null);
-    
+    setUserState(null);
+
     // 2. Clear from localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    
+
     // 3. Clear token from headers
     delete api.defaults.headers.common['Authorization'];
   };
@@ -90,6 +95,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    setUser,
     isAuthenticated: !!user, // Helper boolean
   };
 
