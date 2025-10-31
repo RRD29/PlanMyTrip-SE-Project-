@@ -26,10 +26,10 @@ const GeoapifyMapWrapper = ({ center, zoom = 13, markers = [] }) => {
   // Memoize the map to prevent unnecessary re-renders, improving performance
   const displayMap = useMemo(
     () => (
-      <MapContainer 
-        center={mapCenter} 
-        zoom={zoom} 
-        style={{ height: '500px', width: '100%' }}
+      <MapContainer
+        center={mapCenter}
+        zoom={zoom}
+        style={{ height: '500px', width: '100%', zIndex: 1 }}
         scrollWheelZoom={false} // Prevents unwanted zoom with scroll
       >
         <TileLayer

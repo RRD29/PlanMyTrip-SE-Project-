@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { geocodeAddress, fetchFamousPlaces, fetchRailwayStation, calculateDistance } from '../../utils/geoapify-utils'; // <-- New Geocoding Function
 import GeoapifyMapWrapper from '../../components/map/GeoapifyMapWrapper'; // Assuming you kept the original filename
 import Button from '../../components/common/Button'; // Assuming you use this Button component
+import Modal from '../../components/common/Modal'; // Import Modal component
 import { useBooking } from '../../contexts/BookingContext'; // Assuming you use this hook
 
 // Default map center (e.g., center of the US)
@@ -33,6 +34,10 @@ const TripPlanner = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [lastSearchedCity, setLastSearchedCity] = useState(''); // Track last searched city
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false); // State for schedule modal
+    const [isEditMode, setIsEditMode] = useState(false); // State for edit mode
+    const [editableSchedules, setEditableSchedules] = useState([]); // State for editable schedules
+    const [savedSchedules, setSavedSchedules] = useState([]); // State for saved edited schedules
 
     // Form state
     const [startDate, setStartDate] = useState('');
@@ -51,7 +56,7 @@ const TripPlanner = () => {
     };
 
     // Refactored search function
-    const performCitySearch = async (city, rad) => {
+    const performCitySearch = useCallback(async (city, rad) => {
         setLoading(true);
         setError(null);
 
@@ -95,7 +100,7 @@ const TripPlanner = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     const handleGeocodeAndAddMarker = async () => {
         if (!addressInput.trim()) return;
@@ -156,20 +161,29 @@ const TripPlanner = () => {
     };
 
     // Function to generate dated itinerary
-    const generateDatedItinerary = () => {
+    const generateDatedItinerary = useCallback(() => {
         if (!startDate || !endDate || itinerary.length === 0) return;
 
         const start = new Date(startDate);
         const end = new Date(endDate);
         const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1; // Inclusive days
 
-        const placesPerDay = Math.ceil(itinerary.length / totalDays);
+        const totalPlaces = itinerary.length;
+        const basePlacesPerDay = Math.floor(totalPlaces / totalDays);
+        const extraPlaces = totalPlaces % totalDays;
+
         const datedPlan = [];
 
+        let placeIndex = 0;
         for (let i = 0; i < totalDays; i++) {
             const date = new Date(start);
             date.setDate(start.getDate() + i);
-            const dayPlaces = itinerary.slice(i * placesPerDay, (i + 1) * placesPerDay);
+
+            // Distribute extra places to the first 'extraPlaces' days
+            const placesForThisDay = basePlacesPerDay + (i < extraPlaces ? 1 : 0);
+            const dayPlaces = itinerary.slice(placeIndex, placeIndex + placesForThisDay);
+            placeIndex += placesForThisDay;
+
             datedPlan.push({
                 date: date.toISOString().split('T')[0], // YYYY-MM-DD
                 places: dayPlaces
@@ -177,19 +191,19 @@ const TripPlanner = () => {
         }
 
         setDatedItinerary(datedPlan);
-    };
+    }, [startDate, endDate, itinerary]);
 
     // Generate dated itinerary when dates or itinerary change
     useEffect(() => {
         generateDatedItinerary();
-    }, [startDate, endDate, itinerary]);
+    }, [startDate, endDate, itinerary, generateDatedItinerary]);
 
     // Re-run search when radius changes if a city was previously searched
     useEffect(() => {
         if (lastSearchedCity && radius) {
             performCitySearch(lastSearchedCity, radius);
         }
-    }, [radius]);
+    }, [radius, lastSearchedCity, performCitySearch]);
 
     const handleCreateTrip = async () => {
         if (!startDate || !endDate || itinerary.length === 0) {
@@ -211,7 +225,7 @@ const TripPlanner = () => {
         };
 
         try {
-            const { booking, clientSecret } = await createBooking(mockBookingData);
+            const { booking } = await createBooking(mockBookingData);
             navigate(`/booking/${booking._id}`);
 
         } catch (err) {
@@ -220,12 +234,139 @@ const TripPlanner = () => {
         }
     };
 
+    // Function to initialize editable schedules
+    const initializeEditableSchedules = () => {
+        const schedules = datedItinerary.map(day => ({
+            date: day.date,
+            schedule: generateDaySchedule(day)
+        }));
+        setEditableSchedules(schedules);
+    };
+
+    // Function to handle edit mode toggle
+    const handleEditToggle = () => {
+        if (!isEditMode) {
+            // Entering edit mode: initialize editable schedules
+            initializeEditableSchedules();
+        } else {
+            // Exiting edit mode: save the changes
+            setSavedSchedules([...editableSchedules]);
+        }
+        setIsEditMode(!isEditMode);
+    };
+
+    // Function to update editable schedule
+    const updateScheduleItem = (dayIndex, itemIndex, field, value) => {
+        const updatedSchedules = [...editableSchedules];
+        updatedSchedules[dayIndex].schedule[itemIndex][field] = value;
+        setEditableSchedules(updatedSchedules);
+    };
+
+    // Function to add a new schedule item
+    const addScheduleItem = (dayIndex, insertIndex) => {
+        const updatedSchedules = [...editableSchedules];
+        const newItem = { time: '12:00', activity: 'New Activity' };
+        updatedSchedules[dayIndex].schedule.splice(insertIndex + 1, 0, newItem);
+        setEditableSchedules(updatedSchedules);
+    };
+
+    // Function to remove a schedule item
+    const removeScheduleItem = (dayIndex, itemIndex) => {
+        const updatedSchedules = [...editableSchedules];
+        updatedSchedules[dayIndex].schedule.splice(itemIndex, 1);
+        setEditableSchedules(updatedSchedules);
+    };
+
+    // Function to download schedule as text file
+    const downloadSchedule = () => {
+        const schedulesToDownload = savedSchedules.length > 0 ? savedSchedules : datedItinerary.map(day => ({
+            date: day.date,
+            schedule: generateDaySchedule(day)
+        }));
+
+        let content = 'Trip Schedule\n\n';
+        schedulesToDownload.forEach(day => {
+            content += `${new Date(day.date).toDateString()}\n`;
+            content += '='.repeat(50) + '\n';
+            day.schedule.forEach(item => {
+                content += `${item.time} - ${item.activity}\n`;
+            });
+            content += '\n';
+        });
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `trip-schedule-${startDate}-to-${endDate}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
     // Prepare markers for the GeoapifyMapWrapper
     const mapMarkers = itinerary.map(place => ({
         lat: place.lat,
         lng: place.lng,
         info: place.name // Passed as the popup content
     }));
+
+    // Function to generate day-wise schedule
+    const generateDaySchedule = (day) => {
+        const schedule = [];
+        const places = day.places;
+
+        // Breakfast at 8 AM
+        schedule.push({ time: '08:00', activity: 'Breakfast' });
+
+        // Start journey at 9 AM
+        schedule.push({ time: '09:00', activity: 'Start Journey' });
+
+        let currentTime = 9 * 60; // 9 AM in minutes
+        let lunchInserted = false;
+
+        places.forEach((place, index) => {
+            // Estimate travel time based on distance (10-30 min per km, min 15 min)
+            const distance = place.distance ? parseFloat(place.distance) : 0;
+            const travelTime = Math.max(15, Math.min(30 + distance * 5, 120)); // 5 min per km, cap at 2 hours
+            currentTime += travelTime;
+
+            // Round time
+            const arrivalTime = Math.round(currentTime);
+            const hours = Math.floor(arrivalTime / 60);
+            const minutes = arrivalTime % 60;
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            schedule.push({ time: timeString, activity: `Arrive at ${place.name}` });
+
+            // Add visit time (assume 1-2 hours per place)
+            const visitTime = 90; // 1.5 hours
+            currentTime += visitTime;
+
+            // Insert lunch around 12-1 PM if not inserted and time is appropriate
+            if (!lunchInserted && currentTime >= 12 * 60 && currentTime <= 13 * 60) {
+                schedule.push({ time: '12:30', activity: 'Lunch' });
+                lunchInserted = true;
+                currentTime = Math.max(currentTime, 13 * 60); // Ensure time moves to after lunch
+            }
+        });
+
+        // If lunch not inserted, add it at 12:30
+        if (!lunchInserted) {
+            schedule.push({ time: '12:30', activity: 'Lunch' });
+        }
+
+        // Add afternoon activities or free time if schedule ends early
+        if (currentTime < 17 * 60) { // Before 5 PM
+            schedule.push({ time: '15:00', activity: 'Free time / Afternoon activities' });
+        }
+
+        // Dinner at 7 PM
+        schedule.push({ time: '19:00', activity: 'Dinner' });
+
+        // Sort schedule by time
+        return schedule.sort((a, b) => a.time.localeCompare(b.time));
+    };
 
     // --- RENDER LOGIC ---
     // Note: We no longer need to check isLoaded or loadError from Google's useJsApiLoader
@@ -345,19 +486,29 @@ const TripPlanner = () => {
                     )}
                 </div>
 
-                {/* --- Step 3: Action Button --- */}
-                <div className="pt-4 border-t">
-                    <Button
-                        size="lg"
-                        className="w-full"
-                        onClick={handleCreateTrip}
-                        loading={isCreatingBooking}
-                        disabled={itinerary.length === 0 || isCreatingBooking || !startDate || !endDate}
-                    >
-                        {isCreatingBooking ? 'Creating...' : 'Find Guides & Book'}
-                    </Button>
-                    <p className="text-xs text-gray-500 mt-2 text-center">
-                        This will proceed to guide selection and payment.
+                {/* --- Step 3: Action Buttons --- */}
+                <div className="pt-4 border-t space-y-3">
+                    <div className="flex space-x-3">
+                        <Button
+                            size="lg"
+                            className="flex-1"
+                            onClick={() => setIsScheduleModalOpen(true)}
+                            disabled={datedItinerary.length === 0}
+                        >
+                            Day to Day Schedule
+                        </Button>
+                        <Button
+                            size="lg"
+                            className="flex-1"
+                            onClick={handleCreateTrip}
+                            loading={isCreatingBooking}
+                            disabled={itinerary.length === 0 || isCreatingBooking || !startDate || !endDate}
+                        >
+                            {isCreatingBooking ? 'Creating...' : 'Find Guides & Book'}
+                        </Button>
+                    </div>
+                    <p className="text-xs text-gray-500 text-center">
+                        View your day-wise schedule or proceed to guide selection and payment.
                     </p>
                 </div>
             </div>
@@ -365,12 +516,102 @@ const TripPlanner = () => {
             {/* --- Right Panel: Map (Geoapify) --- */}
             <div className="lg:col-span-2 rounded-lg overflow-hidden shadow">
                 {/* Use GeoapifyMapWrapper and pass the cleaned marker data */}
-                <GeoapifyMapWrapper 
+                <GeoapifyMapWrapper
                     center={mapCenter} // Array [lat, lng]
                     zoom={zoom}
                     markers={mapMarkers}
                 />
             </div>
+
+            {/* --- Schedule Modal --- */}
+            <Modal
+                isOpen={isScheduleModalOpen}
+                onClose={() => setIsScheduleModalOpen(false)}
+                title="Day to Day Schedule"
+                size="xl"
+            >
+                <div className="space-y-4">
+                    {/* Action Buttons */}
+                    <div className="flex justify-between items-center">
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={handleEditToggle}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                            >
+                                {isEditMode ? 'Save Edits' : 'Edit Schedule'}
+                            </button>
+                            <button
+                                onClick={downloadSchedule}
+                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                            >
+                                Download Schedule
+                            </button>
+                        </div>
+                        <span className="text-sm text-gray-500">
+                            {isEditMode ? 'Editing mode: Click on any time or activity to edit' : 'View mode'}
+                        </span>
+                    </div>
+
+                    {/* Schedule Content */}
+                    <div className="max-h-96 overflow-y-auto space-y-6">
+                        {(isEditMode ? editableSchedules : (savedSchedules.length > 0 ? savedSchedules : datedItinerary.map(day => ({
+                            date: day.date,
+                            schedule: generateDaySchedule(day)
+                        })))).map((day, dayIndex) => (
+                            <div key={dayIndex} className="border rounded-lg p-4 bg-gray-50">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                    {new Date(day.date).toDateString()}
+                                </h3>
+                                <div className="space-y-2">
+                                    {day.schedule.map((item, itemIndex) => (
+                                        <div key={itemIndex} className="flex items-center space-x-4">
+                                            {isEditMode ? (
+                                                <>
+                                                    <input
+                                                        type="time"
+                                                        value={item.time}
+                                                        onChange={(e) => updateScheduleItem(dayIndex, itemIndex, 'time', e.target.value)}
+                                                        className="font-medium text-gray-700 w-20 px-2 py-1 border rounded"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={item.activity}
+                                                        onChange={(e) => updateScheduleItem(dayIndex, itemIndex, 'activity', e.target.value)}
+                                                        className="text-gray-600 flex-1 px-2 py-1 border rounded"
+                                                    />
+                                                    <button
+                                                        onClick={() => addScheduleItem(dayIndex, itemIndex)}
+                                                        className="text-green-500 hover:text-green-700 p-1"
+                                                        title="Add new item below"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => removeScheduleItem(dayIndex, itemIndex)}
+                                                        className="text-red-500 hover:text-red-700 p-1"
+                                                        title="Remove this item"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="font-medium text-gray-700 w-16">{item.time}</span>
+                                                    <span className="text-gray-600">{item.activity}</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };
