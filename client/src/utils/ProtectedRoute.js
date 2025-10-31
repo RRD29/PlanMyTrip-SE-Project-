@@ -29,7 +29,13 @@ const ProtectedRoute = ({ allowedRoles }) => {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // 4. If authenticated and has the correct role (or no role specified), show the page
+  // 4. If user is a guide but profile is not complete, redirect to guide profile page
+  // But allow access to the profile page itself even if incomplete
+  if (user.role === 'guide' && !user.isProfileComplete && location.pathname !== '/dashboard-guide/profile') {
+    return <Navigate to="/dashboard-guide/profile" replace />;
+  }
+
+  // 5. If authenticated and has the correct role (or no role specified), show the page
   return <Outlet />; // Renders the child component (e.t., <UserDashboard />)
 };
 
