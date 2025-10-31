@@ -58,6 +58,7 @@ const Modal = ({ isOpen, onClose, children, title, size = 'md' }) => {
       onClick={onClose} // Close on backdrop click
       aria-modal="true"
       role="dialog"
+      style={{ zIndex: 1000 }}
     >
       <div
         // --- Modal Panel ---
