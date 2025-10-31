@@ -45,6 +45,11 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  // Determine the correct dashboard path based on role
+  const dashboardPath = user
+    ? (user.role === 'guide' ? '/dashboard-guide' : '/dashboard')
+    : '/login';
+
   // Helper for NavLink active styling
   const navLinkClass = ({ isActive }) =>
     `px-3 py-2 rounded-md text-sm font-medium ${
@@ -52,7 +57,7 @@ const Navbar = () => {
         ? 'bg-gray-900 text-white'
         : 'text-gray-300 hover:bg-gray-700 hover:text-white'
     }`;
-  
+
   const mobileNavLinkClass = ({ isActive }) =>
     `block px-3 py-2 rounded-md text-base font-medium ${
       isActive
@@ -64,7 +69,7 @@ const Navbar = () => {
     <nav className="bg-gray-800 shadow-lg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          
+
           {/* --- Logo and Desktop Nav Links --- */}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 text-white text-xl font-bold">
@@ -75,11 +80,15 @@ const Navbar = () => {
                 <NavLink to="/" className={navLinkClass} end>
                   Home
                 </NavLink>
-                <NavLink to="/guides" className={navLinkClass}>
-                  Find Guides
-                </NavLink>
+                {/* --- HIDE "Find Guides" for logged-in guides --- */}
+                {(!user || user.role !== 'guide') && (
+                  <NavLink to="/guides" className={navLinkClass}>
+                    Find Guides
+                  </NavLink>
+                )}
+                {/* --------------------------------------------- */}
                 {user && (
-                  <NavLink to="/dashboard" className={navLinkClass}>
+                  <NavLink to={dashboardPath} className={navLinkClass}>
                     Dashboard
                   </NavLink>
                 )}
@@ -145,11 +154,15 @@ const Navbar = () => {
             <NavLink to="/" className={mobileNavLinkClass} end>
               Home
             </NavLink>
-            <NavLink to="/guides" className={mobileNavLinkClass}>
-              Find Guides
-            </NavLink>
+            {/* --- HIDE "Find Guides" for logged-in guides --- */}
+            {(!user || user.role !== 'guide') && (
+              <NavLink to="/guides" className={mobileNavLinkClass}>
+                Find Guides
+              </NavLink>
+            )}
+            {/* --------------------------------------------- */}
             {user && (
-              <NavLink to="/dashboard" className={mobileNavLinkClass}>
+              <NavLink to={dashboardPath} className={mobileNavLinkClass}>
                 Dashboard
               </NavLink>
             )}
