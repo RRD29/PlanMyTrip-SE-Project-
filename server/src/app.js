@@ -25,6 +25,7 @@ app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 
 // Serve static files (e.g., uploads)
 app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 
 // Parse cookies
 app.use(cookieParser());
