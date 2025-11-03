@@ -9,7 +9,7 @@ import path from 'path';
 // --- Get Current User's Profile ---
 export const getMyProfile = asyncHandler(async (req, res) => {
     // req.user is attached by the verifyJWT middleware
-    const user = await User.findById(req.user._id).select("-password -refreshToken");
+    const user = await User.findById(req.user._id).select("-password -refreshToken +identityVerification +paymentDetails");
     if (!user) {
         throw new ApiError(404, "User not found");
     }
@@ -21,13 +21,31 @@ export const getMyProfile = asyncHandler(async (req, res) => {
 // --- Update Current User's Profile (FIXED LOGIC) ---
 export const updateMyProfile = asyncHandler(async (req, res) => {
     // The client sends these fields, which might be undefined for a regular user
-    const { fullName, bio, baseLocation, pricePerDay, dob, gender, contactNumber, yearsExperience, languages, expertiseRegions, specialties, availabilitySchedule } = req.body;
+    const {
+        fullName,
+        // Traveller fields
+        phoneNumber, gender, dateOfBirth, address, preferredTravelStyle, preferredLanguages, foodPreference, profileBio,
+        // Guide fields
+        bio, baseLocation, pricePerDay, dob, contactNumber, yearsExperience, languages, expertiseRegions, specialties, availabilitySchedule
+    } = req.body;
 
     // 1. Start with non-role-specific updates
     const updateData = {};
     if (fullName) updateData.fullName = fullName;
 
-    // 2. Handle guide-specific updates if the user's role is 'guide'
+    // 2. Handle traveller-specific updates if the user's role is 'user'
+    if (req.user.role === 'user') {
+        if (phoneNumber !== undefined && phoneNumber !== '') updateData['travellerProfile.phoneNumber'] = phoneNumber;
+        if (gender !== undefined && gender !== '') updateData['travellerProfile.gender'] = gender;
+        if (dateOfBirth !== undefined && dateOfBirth !== '') updateData['travellerProfile.dateOfBirth'] = new Date(dateOfBirth);
+        if (address !== undefined && (address.city || address.state || address.country || address.pincode)) updateData['travellerProfile.address'] = address;
+        if (preferredTravelStyle !== undefined) updateData['travellerProfile.preferredTravelStyle'] = Array.isArray(preferredTravelStyle) ? preferredTravelStyle : [];
+        if (preferredLanguages !== undefined) updateData['travellerProfile.preferredLanguages'] = Array.isArray(preferredLanguages) ? preferredLanguages : [];
+        if (foodPreference !== undefined && foodPreference !== '') updateData['travellerProfile.foodPreference'] = foodPreference;
+        if (profileBio !== undefined && profileBio !== '') updateData['travellerProfile.profileBio'] = profileBio;
+    }
+
+    // 3. Handle guide-specific updates if the user's role is 'guide'
     if (req.user.role === 'guide') {
         // Set fields that were actually provided as individual paths
         if (bio !== undefined) updateData['guideProfile.bio'] = bio;
@@ -48,7 +66,7 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
         throw new ApiError(400, "No data provided for update.");
     }
 
-    // 3. Find and update the user document
+    // 4. Find and update the user document
     const user = await User.findByIdAndUpdate(
         req.user._id,
         { $set: updateData },
@@ -80,12 +98,16 @@ export const uploadAvatar = asyncHandler(async (req, res) => {
     if (req.user.role === 'guide') {
         updateData['guideProfile.profilePhoto'] = avatarUrl;
     }
+    // If user is a traveller, also update the profilePhoto in travellerProfile
+    if (req.user.role === 'user') {
+        updateData['travellerProfile.profilePhoto'] = avatarUrl;
+    }
 
     const user = await User.findByIdAndUpdate(
         req.user._id,
         updateData,
         { new: true }
-    ).select("-password -refreshToken");
+    ).select("-password -refreshToken +identityVerification +paymentDetails");
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -137,7 +159,7 @@ export const verifyPhoneOTP = asyncHandler(async (req, res) => {
             'guideProfile.isContactVerified': true
         },
         { new: true }
-    ).select("-password -refreshToken");
+    ).select("-password -refreshToken +identityVerification +paymentDetails");
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -167,7 +189,7 @@ export const uploadIdentityDoc = asyncHandler(async (req, res) => {
         req.user._id,
         { $set: updateData },
         { new: true }
-    ).select("-password -refreshToken");
+    ).select("-password -refreshToken +identityVerification +paymentDetails");
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -208,51 +230,52 @@ export const updateGuideProfile = asyncHandler(async (req, res) => {
         upiId
     } = req.body;
 
-    // Validate required fields for profile completion
-    const requiredFields = [
-        fullName, dob, gender, contactNumber, baseLocation,
-        yearsExperience, languages, expertiseRegions, specialties,
-        availabilitySchedule, pricePerDay, bio,
-        bankAccountName, bankAccountNumber, bankIFSC
-    ];
+    const updateData = {};
 
-    const missingFields = requiredFields.filter(field => !field);
-    if (missingFields.length > 0) {
-        throw new ApiError(400, `Missing required fields: ${missingFields.join(', ')}`);
+    // Update provided fields
+    if (fullName !== undefined) updateData.fullName = fullName;
+    if (dob !== undefined) updateData['guideProfile.dob'] = new Date(dob);
+    if (gender !== undefined) updateData['guideProfile.gender'] = gender;
+    if (contactNumber !== undefined) updateData['guideProfile.contactNumber'] = contactNumber;
+    if (baseLocation !== undefined) updateData['guideProfile.baseLocation'] = baseLocation;
+    if (yearsExperience !== undefined) updateData['guideProfile.yearsExperience'] = Number(yearsExperience);
+    if (languages !== undefined) updateData['guideProfile.languages'] = Array.isArray(languages) ? languages : languages.split(',').map(s => s.trim()).filter(Boolean);
+    if (expertiseRegions !== undefined) updateData['guideProfile.expertiseRegions'] = Array.isArray(expertiseRegions) ? expertiseRegions : expertiseRegions.split(',').map(s => s.trim()).filter(Boolean);
+    if (specialties !== undefined) updateData['guideProfile.specialties'] = Array.isArray(specialties) ? specialties : specialties.split(',').map(s => s.trim()).filter(Boolean);
+    if (availabilitySchedule !== undefined) updateData['guideProfile.availabilitySchedule'] = availabilitySchedule;
+    if (pricePerDay !== undefined) updateData['guideProfile.pricePerDay'] = Number(pricePerDay);
+    if (bio !== undefined) updateData['guideProfile.bio'] = bio;
+    if (aadhaarNumber !== undefined) updateData['identityVerification.aadhaarNumber'] = aadhaarNumber;
+    if (panNumber !== undefined) updateData['identityVerification.panNumber'] = panNumber;
+    if (passportNumber !== undefined) updateData['identityVerification.passportNumber'] = passportNumber;
+    if (drivingLicenseNumber !== undefined) updateData['identityVerification.drivingLicenseNumber'] = drivingLicenseNumber;
+    if (tourismLicenseNumber !== undefined) updateData['identityVerification.tourismLicenseNumber'] = tourismLicenseNumber;
+    if (trainingCertificateNumber !== undefined) updateData['identityVerification.trainingCertificateNumber'] = trainingCertificateNumber;
+    if (policeVerificationNumber !== undefined) updateData['identityVerification.policeVerificationNumber'] = policeVerificationNumber;
+    if (bankAccountName !== undefined) updateData['paymentDetails.bankAccountName'] = bankAccountName;
+    if (bankAccountNumber !== undefined) updateData['paymentDetails.bankAccountNumber'] = bankAccountNumber;
+    if (bankIFSC !== undefined) updateData['paymentDetails.bankIFSC'] = bankIFSC;
+    if (upiId !== undefined) updateData['paymentDetails.upiId'] = upiId;
+
+    // Check if all required fields are provided to set profile complete
+    const requiredProvided = fullName && dob && gender && contactNumber && baseLocation &&
+        yearsExperience !== undefined && languages && expertiseRegions && specialties &&
+        availabilitySchedule && pricePerDay !== undefined && bio &&
+        bankAccountName && bankAccountNumber && bankIFSC;
+
+    if (requiredProvided) {
+        updateData.isProfileComplete = true;
     }
 
-    const updateData = {
-        fullName,
-        'guideProfile.dob': new Date(dob),
-        'guideProfile.gender': gender,
-        'guideProfile.contactNumber': contactNumber,
-        'guideProfile.baseLocation': baseLocation,
-        'guideProfile.yearsExperience': Number(yearsExperience),
-        'guideProfile.languages': Array.isArray(languages) ? languages : languages.split(',').map(s => s.trim()),
-        'guideProfile.expertiseRegions': Array.isArray(expertiseRegions) ? expertiseRegions : expertiseRegions.split(',').map(s => s.trim()),
-        'guideProfile.specialties': Array.isArray(specialties) ? specialties : specialties.split(',').map(s => s.trim()),
-        'guideProfile.availabilitySchedule': availabilitySchedule,
-        'guideProfile.pricePerDay': Number(pricePerDay),
-        'guideProfile.bio': bio,
-        'identityVerification.aadhaarNumber': aadhaarNumber,
-        'identityVerification.panNumber': panNumber,
-        'identityVerification.passportNumber': passportNumber,
-        'identityVerification.drivingLicenseNumber': drivingLicenseNumber,
-        'identityVerification.tourismLicenseNumber': tourismLicenseNumber,
-        'identityVerification.trainingCertificateNumber': trainingCertificateNumber,
-        'identityVerification.policeVerificationNumber': policeVerificationNumber,
-        'paymentDetails.bankAccountName': bankAccountName,
-        'paymentDetails.bankAccountNumber': bankAccountNumber,
-        'paymentDetails.bankIFSC': bankIFSC,
-        'paymentDetails.upiId': upiId || undefined,
-        isProfileComplete: true
-    };
+    if (Object.keys(updateData).length === 0) {
+        throw new ApiError(400, "No data provided for update.");
+    }
 
     const user = await User.findByIdAndUpdate(
         req.user._id,
         { $set: updateData },
         { new: true, runValidators: true }
-    ).select("-password -refreshToken");
+    ).select("-password -refreshToken +identityVerification +paymentDetails");
 
     if (!user) {
         throw new ApiError(404, "User not found");

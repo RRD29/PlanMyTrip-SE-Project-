@@ -34,8 +34,9 @@ connectDB()
     });
 
     // Start listening on the HTTP server (which runs Express and Socket.io)
-    httpServer.listen(config.PORT || 8000, () => {
+    httpServer.listen(config.PORT || 8000, '0.0.0.0', () => {
       console.log(`\n✅ Server is running on port: ${config.PORT || 8000}`);
+      console.log(`🌐 Accessible at: http://<your_local_ip>:${config.PORT || 8000}`);
       console.log(`Client URL: ${config.CLIENT_URL}`);
       console.log(`📡 Socket.io is active.`);
     });
