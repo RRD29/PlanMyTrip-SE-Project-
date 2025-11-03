@@ -49,6 +49,23 @@ const guideProfileSchema = new Schema({
   profilePhoto: { type: String }, // URL to uploaded profile photo
 }, { _id: false });
 
+const travellerProfileSchema = new Schema({
+  phoneNumber: { type: String },
+  gender: { type: String, enum: ['Male', 'Female', 'Other'] },
+  dateOfBirth: { type: Date },
+  address: {
+    city: { type: String },
+    state: { type: String },
+    country: { type: String },
+    pincode: { type: String },
+  },
+  preferredTravelStyle: [{ type: String, enum: ['Adventure', 'Relaxation', 'Cultural', 'Nature', 'Luxury', 'Budget', 'Solo', 'Family'] }],
+  preferredLanguages: [{ type: String }],
+  foodPreference: { type: String, enum: ['Veg', 'Non-Veg', 'Vegan', 'Jain', 'Halal', 'Other'] },
+  profileBio: { type: String },
+  profilePhoto: { type: String }, // URL to uploaded profile photo (optional)
+}, { _id: false });
+
 // --- Main User Schema ---
 const userSchema = new Schema(
   {
@@ -58,6 +75,7 @@ const userSchema = new Schema(
     role: { type: String, enum: ['user', 'guide', 'admin'], default: 'user' },
     avatar: { type: String, default: 'https://via.placeholder.com/150' },
     guideProfile: { type: guideProfileSchema, default: () => ({}) },
+    travellerProfile: { type: travellerProfileSchema, default: () => ({}) },
     identityVerification: { type: identityVerificationSchema, default: () => ({}), select: false },
     paymentDetails: { type: paymentDetailsSchema, default: () => ({}), select: false },
     isProfileComplete: { type: Boolean, default: false },

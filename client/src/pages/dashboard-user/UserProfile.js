@@ -11,6 +11,16 @@ const UserProfile = () => {
 
   // Form state - Initialize with potentially fetched data
   const [fullName, setFullName] = useState('');
+  // Traveller fields
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [travellerGender, setTravellerGender] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [address, setAddress] = useState({ city: '', state: '', country: '', pincode: '' });
+  const [preferredTravelStyle, setPreferredTravelStyle] = useState([]);
+  const [preferredLanguages, setPreferredLanguages] = useState([]);
+  const [foodPreference, setFoodPreference] = useState('');
+  const [profileBio, setProfileBio] = useState('');
+  // Guide fields
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('');
   const [contactNumber, setContactNumber] = useState('');
@@ -63,6 +73,16 @@ const UserProfile = () => {
         setCurrentUser(fetchedUser);
         // Initialize form fields from fetched data
         setFullName(fetchedUser.fullName || '');
+        // Traveller fields
+        setPhoneNumber(fetchedUser.travellerProfile?.phoneNumber || '');
+        setTravellerGender(fetchedUser.travellerProfile?.gender || '');
+        setDateOfBirth(fetchedUser.travellerProfile?.dateOfBirth ? fetchedUser.travellerProfile.dateOfBirth.split('T')[0] : '');
+        setAddress(fetchedUser.travellerProfile?.address || { city: '', state: '', country: '', pincode: '' });
+        setPreferredTravelStyle(fetchedUser.travellerProfile?.preferredTravelStyle || []);
+        setPreferredLanguages(fetchedUser.travellerProfile?.preferredLanguages || []);
+        setFoodPreference(fetchedUser.travellerProfile?.foodPreference || '');
+        setProfileBio(fetchedUser.travellerProfile?.profileBio || '');
+        // Guide fields
         setDob(fetchedUser.guideProfile?.dob ? fetchedUser.guideProfile.dob.split('T')[0] : '');
         setGender(fetchedUser.guideProfile?.gender || '');
         setContactNumber(fetchedUser.guideProfile?.contactNumber || '');
@@ -261,8 +281,20 @@ const UserProfile = () => {
     setIsSubmitting(true);
     setMessage('');
 
+    // For traveller users, no required fields, so allow saving even if fields are empty
     const profileData = {
       fullName,
+      // Include travellerProfile if the user is a traveller
+      ...(currentUser.role === 'user' && {
+        phoneNumber: phoneNumber || undefined,
+        gender: travellerGender || undefined,
+        dateOfBirth: dateOfBirth || undefined,
+        address: address || undefined,
+        preferredTravelStyle: preferredTravelStyle || undefined,
+        preferredLanguages: preferredLanguages || undefined,
+        foodPreference: foodPreference || undefined,
+        profileBio: profileBio || undefined,
+      }),
       // Only include guideProfile if the user is a guide
       ...(currentUser.role === 'guide' && {
           dob: dob || undefined,
@@ -319,7 +351,7 @@ const UserProfile = () => {
         </div>
       )}
 
-      <form onSubmit={isProfileComplete ? handleBasicProfileSubmit : handleCompleteProfileSubmit} className="bg-white p-6 rounded-lg shadow border border-gray-200 max-w-2xl space-y-6">
+      <form onSubmit={user.role === 'guide' && !isProfileComplete ? handleCompleteProfileSubmit : handleBasicProfileSubmit} className="bg-white p-6 rounded-lg shadow border border-gray-200 max-w-2xl space-y-6">
         {message && <p className={`p-3 rounded-md ${message.includes('successfully') ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'}`}>{message}</p>}
 
         <h2 className="text-xl font-semibold border-b pb-2">Basic Information</h2>
@@ -346,6 +378,89 @@ const UserProfile = () => {
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email (cannot be changed)</label>
             <input type="email" id="email" value={user.email} disabled className="mt-1 block w-full input-style bg-gray-100"/>
         </div>
+
+        {/* --- Traveller-Only Fields --- */}
+        {user.role === 'user' && (
+          <>
+            <h2 className="text-xl font-semibold border-t pt-4 mt-4">Traveller Profile</h2>
+            {/* Phone Number */}
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <input type="tel" id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="mt-1 block w-full input-style"/>
+            </div>
+            {/* Gender */}
+            <div>
+              <label htmlFor="travellerGender" className="block text-sm font-medium text-gray-700">Gender</label>
+              <select id="travellerGender" value={travellerGender} onChange={(e) => setTravellerGender(e.target.value)} className="mt-1 block w-full input-style">
+                <option value="">Select...</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            {/* Date of Birth */}
+            <div>
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">Date of Birth</label>
+              <input type="date" id="dateOfBirth" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className="mt-1 block w-full input-style"/>
+            </div>
+            {/* Address */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="city" className="block text-sm font-medium text-gray-700">City</label>
+                <input type="text" id="city" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} className="mt-1 block w-full input-style"/>
+              </div>
+              <div>
+                <label htmlFor="state" className="block text-sm font-medium text-gray-700">State</label>
+                <input type="text" id="state" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} className="mt-1 block w-full input-style"/>
+              </div>
+              <div>
+                <label htmlFor="country" className="block text-sm font-medium text-gray-700">Country</label>
+                <input type="text" id="country" value={address.country} onChange={(e) => setAddress({ ...address, country: e.target.value })} className="mt-1 block w-full input-style"/>
+              </div>
+              <div>
+                <label htmlFor="pincode" className="block text-sm font-medium text-gray-700">Pincode</label>
+                <input type="text" id="pincode" value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value })} className="mt-1 block w-full input-style"/>
+              </div>
+            </div>
+            {/* Preferred Travel Style */}
+            <div>
+              <label htmlFor="preferredTravelStyle" className="block text-sm font-medium text-gray-700">Preferred Travel Style</label>
+              <select multiple id="preferredTravelStyle" value={preferredTravelStyle} onChange={(e) => setPreferredTravelStyle(Array.from(e.target.selectedOptions, option => option.value))} className="mt-1 block w-full input-style">
+                <option value="Adventure">Adventure</option>
+                <option value="Relaxation">Relaxation</option>
+                <option value="Cultural">Cultural</option>
+                <option value="Nature">Nature</option>
+                <option value="Luxury">Luxury</option>
+                <option value="Budget">Budget</option>
+                <option value="Solo">Solo</option>
+                <option value="Family">Family</option>
+              </select>
+            </div>
+            {/* Preferred Languages */}
+            <div>
+              <label htmlFor="preferredLanguages" className="block text-sm font-medium text-gray-700">Preferred Languages</label>
+              <input type="text" id="preferredLanguages" value={preferredLanguages.join(', ')} onChange={(e) => setPreferredLanguages(e.target.value.split(',').map(s => s.trim()))} placeholder="e.g., English, Hindi, French" className="mt-1 block w-full input-style"/>
+            </div>
+            {/* Food Preference */}
+            <div>
+              <label htmlFor="foodPreference" className="block text-sm font-medium text-gray-700">Food Preference</label>
+              <select id="foodPreference" value={foodPreference} onChange={(e) => setFoodPreference(e.target.value)} className="mt-1 block w-full input-style">
+                <option value="">Select...</option>
+                <option value="Veg">Veg</option>
+                <option value="Non-Veg">Non-Veg</option>
+                <option value="Vegan">Vegan</option>
+                <option value="Jain">Jain</option>
+                <option value="Halal">Halal</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            {/* Profile Bio */}
+            <div>
+              <label htmlFor="profileBio" className="block text-sm font-medium text-gray-700">Profile Bio</label>
+              <textarea id="profileBio" rows={4} value={profileBio} onChange={(e) => setProfileBio(e.target.value)} placeholder="Tell us about yourself..." className="mt-1 block w-full input-style"></textarea>
+            </div>
+          </>
+        )}
 
         {/* --- Guide-Only Fields --- */}
         {user.role === 'guide' && (
@@ -431,8 +546,8 @@ const UserProfile = () => {
                 <h2 className="text-xl font-semibold border-t pt-4 mt-4">Identity Verification</h2>
                 {/* Aadhaar Card Upload */}
                 <div>
-                    <label htmlFor="aadhaarCard" className="block text-sm font-medium text-gray-700">Aadhaar Card *</label>
-                    <input type="file" id="aadhaarCard" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('aadhaarCard', e.target.files[0])} className="mt-1 block w-full input-style"/>
+                    <label htmlFor="aadhaarCard" className={`block text-sm font-medium cursor-pointer ${aadhaarCardUploaded ? 'text-green-600' : 'text-gray-700'}`}>{aadhaarCardUploaded ? 'Change Aadhaar Card' : 'Choose Aadhaar Card'}</label>
+                    <input type="file" id="aadhaarCard" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('aadhaarCard', e.target.files[0])} className="sr-only"/>
                     {aadhaarCardUrl && (
                         <div className="mt-2">
                             <a href={aadhaarCardUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View Aadhaar Card</a>
@@ -441,8 +556,8 @@ const UserProfile = () => {
                 </div>
                 {/* PAN Card Upload */}
                 <div>
-                    <label htmlFor="panCard" className="block text-sm font-medium text-gray-700">PAN Card *</label>
-                    <input type="file" id="panCard" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('panCard', e.target.files[0])} className="mt-1 block w-full input-style"/>
+                    <label htmlFor="panCard" className={`block text-sm font-medium cursor-pointer ${panCardUploaded ? 'text-green-600' : 'text-gray-700'}`}>{panCardUploaded ? 'Change PAN Card' : 'Choose PAN Card'}</label>
+                    <input type="file" id="panCard" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('panCard', e.target.files[0])} className="sr-only"/>
                     {panCardUrl && (
                         <div className="mt-2">
                             <a href={panCardUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View PAN Card</a>
@@ -451,8 +566,8 @@ const UserProfile = () => {
                 </div>
                 {/* Tourism License Upload */}
                 <div>
-                    <label htmlFor="tourismLicense" className="block text-sm font-medium text-gray-700">Tourism License (Optional)</label>
-                    <input type="file" id="tourismLicense" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('tourismLicense', e.target.files[0])} className="mt-1 block w-full input-style"/>
+                    <label htmlFor="tourismLicense" className={`block text-sm font-medium cursor-pointer ${tourismLicenseUploaded ? 'text-green-600' : 'text-gray-700'}`}>{tourismLicenseUploaded ? 'Change Tourism License' : 'Choose Tourism License'}</label>
+                    <input type="file" id="tourismLicense" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('tourismLicense', e.target.files[0])} className="sr-only"/>
                     {tourismLicenseUrl && (
                         <div className="mt-2">
                             <a href={tourismLicenseUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View Tourism License</a>
@@ -461,8 +576,8 @@ const UserProfile = () => {
                 </div>
                 {/* Police Verification Upload */}
                 <div>
-                    <label htmlFor="policeVerification" className="block text-sm font-medium text-gray-700">Police Verification *</label>
-                    <input type="file" id="policeVerification" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('policeVerification', e.target.files[0])} className="mt-1 block w-full input-style"/>
+                    <label htmlFor="policeVerification" className={`block text-sm font-medium cursor-pointer ${policeVerificationUploaded ? 'text-green-600' : 'text-gray-700'}`}>{policeVerificationUploaded ? 'Change Police Verification' : 'Choose Police Verification'}</label>
+                    <input type="file" id="policeVerification" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('policeVerification', e.target.files[0])} className="sr-only"/>
                     {policeVerificationUrl && (
                         <div className="mt-2">
                             <a href={policeVerificationUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View Police Verification</a>
