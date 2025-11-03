@@ -226,3 +226,23 @@ export const calculateDistance = (lat1, lng1, lat2, lng2) => {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
+
+
+/**
+ * Fetch road route between multiple waypoints using Geoapify Routing API.
+ * @param {Array} waypoints array of {lat, lng}
+ * @returns {Array} polyline coordinates
+ */
+export const getRoadRoute = async (waypoints) => {
+  const GEOAPIFY_API_KEY = process.env.REACT_APP_GEOAPIFY_API_KEY;
+
+  const waypointStr = waypoints.map(w => `${w.lat},${w.lng}`).join("|");
+
+  const url = `https://api.geoapify.com/v1/routing?waypoints=${waypointStr}&mode=drive&details=route&apiKey=${GEOAPIFY_API_KEY}`;
+
+  const response = await axios.get(url);
+  const coords = response.data.features[0].geometry.coordinates[0]
+    .map(([lng, lat]) => ({ lat, lng }));
+
+  return coords;
+};
