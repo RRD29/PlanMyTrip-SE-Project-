@@ -5,6 +5,7 @@ import GeoapifyMapWrapper from '../../components/map/GeoapifyMapWrapper'; // Ass
 import Button from '../../components/common/Button'; // Assuming you use this Button component
 import Modal from '../../components/common/Modal'; // Import Modal component
 import { useBooking } from '../../contexts/BookingContext'; // Assuming you use this hook
+import axios from 'axios';
 
 // Default map center (e.g., center of the US)
 const initialCenter = [39.8283, -98.5795]; 
@@ -45,6 +46,13 @@ const TripPlanner = () => {
     const [radius, setRadius] = useState('10'); // Default radius in km
     const [isCitySearch, setIsCitySearch] = useState(false); // Flag to detect city search
 
+    // Place details modal state
+    const [selectedPlace, setSelectedPlace] = useState(null);
+    const [placeDetails, setPlaceDetails] = useState(null);
+    const [placeImages, setPlaceImages] = useState([]);
+    const [placeDetailsLoading, setPlaceDetailsLoading] = useState(false);
+    const [isPlaceDetailsModalOpen, setIsPlaceDetailsModalOpen] = useState(false);
+
 
     // --- Handlers ---
 
@@ -61,7 +69,10 @@ const TripPlanner = () => {
         setError(null);
 
         try {
-            // Fetch famous places for the city within radius from railway station
+            // First, geocode the city to get its coordinates
+            const cityResult = await geocodeAddress(city);
+
+            // Fetch famous places for the city within radius from the city center
             const places = await fetchFamousPlaces(city, 10, parseInt(rad)); // Fetch up to 10 places within radius
 
             if (places.length === 0) {
@@ -87,9 +98,8 @@ const TripPlanner = () => {
             // Clear existing itinerary and add new places
             setItinerary(placesWithDistances);
 
-            // Center map on the railway station
-            const station = await fetchRailwayStation(city);
-            setMapCenter([station.lat, station.lng]);
+            // Center map on the city coordinates
+            setMapCenter([cityResult.lat, cityResult.lng]);
             setZoom(12); // Zoom out a bit to show multiple places
 
             setLastSearchedCity(city);
@@ -132,6 +142,7 @@ const TripPlanner = () => {
                 // Update state
                 if (!itinerary.find(p => p.name === newPlace.name)) {
                     setItinerary(prev => [...prev, newPlace]);
+                    // Center map on the new place
                     setMapCenter([newPlace.lat, newPlace.lng]);
                     setZoom(14);
                 }
@@ -275,6 +286,62 @@ const TripPlanner = () => {
         const updatedSchedules = [...editableSchedules];
         updatedSchedules[dayIndex].schedule.splice(itemIndex, 1);
         setEditableSchedules(updatedSchedules);
+    };
+
+    // Function to fetch place details from Wikipedia
+    const fetchPlaceDetails = async (placeName) => {
+        setPlaceDetailsLoading(true);
+        try {
+            // Fetch summary from Wikipedia
+            const summaryResponse = await axios.get(
+                `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(placeName)}`
+            );
+            const summary = summaryResponse.data;
+
+            if (summary.type === 'disambiguation' || summary.type === 'no-extract') {
+                throw new Error('No detailed information found for this place.');
+            }
+
+            setPlaceDetails(summary);
+
+            // Fetch images
+            const imageResponse = await axios.get(
+                `https://en.wikipedia.org/w/api.php?action=query&prop=images&titles=${encodeURIComponent(placeName)}&format=json&origin=*`
+            );
+            const pages = imageResponse.data.query.pages;
+            const pageId = Object.keys(pages)[0];
+            const imageTitles = pages[pageId].images || [];
+
+            const imagePromises = imageTitles.slice(0, 8).map(async (img) => {
+                try {
+                    const imgResponse = await axios.get(
+                        `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(img.title)}&prop=imageinfo&iiprop=url&format=json&origin=*`
+                    );
+                    const imgPages = imgResponse.data.query.pages;
+                    const imgPageId = Object.keys(imgPages)[0];
+                    return imgPages[imgPageId].imageinfo?.[0]?.url;
+                } catch {
+                    return null;
+                }
+            });
+
+            const imageUrls = (await Promise.all(imagePromises)).filter(url => url !== null);
+            setPlaceImages(imageUrls);
+
+        } catch (err) {
+            console.error('Error fetching place details:', err);
+            setPlaceDetails({ title: placeName, extract: 'No detailed information available for this place.' });
+            setPlaceImages([]);
+        } finally {
+            setPlaceDetailsLoading(false);
+        }
+    };
+
+    // Function to handle place click
+    const handlePlaceClick = (place) => {
+        setSelectedPlace(place);
+        setIsPlaceDetailsModalOpen(true);
+        fetchPlaceDetails(place.name);
     };
 
     // Function to download schedule as text file
@@ -460,8 +527,13 @@ const TripPlanner = () => {
                                     <ul className="mt-2 space-y-2">
                                         {day.places.map((place, placeIndex) => (
                                             <li key={placeIndex} className="flex items-center justify-between">
-                                                <div className="text-sm text-gray-700">
-                                                    <span className="font-medium">{place.name}</span>
+                                                <div className="text-sm text-gray-700 flex-1">
+                                                    <button
+                                                        onClick={() => handlePlaceClick(place)}
+                                                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline text-left"
+                                                    >
+                                                        {place.name}
+                                                    </button>
                                                     {place.imageUrl && (
                                                         <img src={place.imageUrl} alt={place.name} className="w-full h-32 object-cover rounded-md mt-2" />
                                                     )}
@@ -474,7 +546,7 @@ const TripPlanner = () => {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <button onClick={() => removeFromItinerary(place.name)} className="text-gray-400 hover:text-red-500">
+                                                <button onClick={() => removeFromItinerary(place.name)} className="text-gray-400 hover:text-red-500 ml-2">
                                                     <CloseIcon className="w-5 h-5" />
                                                 </button>
                                             </li>
@@ -522,6 +594,76 @@ const TripPlanner = () => {
                     markers={mapMarkers}
                 />
             </div>
+
+            {/* --- Place Details Modal --- */}
+            <Modal
+                isOpen={isPlaceDetailsModalOpen}
+                onClose={() => {
+                    setIsPlaceDetailsModalOpen(false);
+                    setSelectedPlace(null);
+                    setPlaceDetails(null);
+                    setPlaceImages([]);
+                }}
+                title={selectedPlace ? `${selectedPlace.name} - Details` : "Place Details"}
+                size="xl"
+            >
+                <div className="space-y-4">
+                    {placeDetailsLoading ? (
+                        <div className="text-center py-8">
+                            <div className="text-gray-500">Loading place details...</div>
+                        </div>
+                    ) : placeDetails ? (
+                        <>
+                            {/* Place Images */}
+                            {placeImages.length > 0 && (
+                                <div className="mb-6">
+                                    <h3 className="text-lg font-semibold mb-3">Images</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                        {placeImages.map((imageUrl, index) => (
+                                            <div key={index} className="aspect-square overflow-hidden rounded-lg bg-gray-100">
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={`${placeDetails.title} image ${index + 1}`}
+                                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Place Description */}
+                            <div>
+                                <h3 className="text-lg font-semibold mb-3">About {placeDetails.title}</h3>
+                                <div className="prose max-w-none">
+                                    <p className="text-gray-700 leading-relaxed">{placeDetails.extract}</p>
+                                </div>
+                            </div>
+
+                            {/* Wikipedia Link */}
+                            {placeDetails.content_urls?.desktop?.page && (
+                                <div className="pt-4 border-t">
+                                    <a
+                                        href={placeDetails.content_urls.desktop.page}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                    >
+                                        Read more on Wikipedia
+                                        <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="text-center py-8">
+                            <div className="text-gray-500">No details available for this place.</div>
+                        </div>
+                    )}
+                </div>
+            </Modal>
 
             {/* --- Schedule Modal --- */}
             <Modal
