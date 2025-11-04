@@ -29,6 +29,7 @@ import UserDashboard from './pages/dashboard-user/UserDashboard';
 import MyBookings from './pages/dashboard-user/MyBookings';
 import TripPlanner from './pages/dashboard-user/TripPlanner';
 import MakeATrip from './pages/dashboard-user/MakeATrip';
+import ExplorePlaces from './pages/dashboard-user/ExplorePlaces';
 import UserProfile from './pages/dashboard-user/UserProfile';
 
 // --- Protected Page Imports (Guide) ---
@@ -93,15 +94,16 @@ function App() {
       </Route>
 
       {/* --- USER Dashboard Routes (Only accessible by users) --- */}
-<Route element={<ProtectedRoute allowedRoles={['user']} />}>
-  <Route element={<DashboardLayout />}>
-    <Route path="/dashboard" element={<UserDashboard />} />
-    <Route path="/dashboard/my-bookings" element={<MyBookings />} />
-    <Route path="/dashboard/trip-planner" element={<TripPlanner />} />
-    <Route path="/dashboard/make-a-trip" element={<MakeATrip />} />
-    <Route path="/dashboard/profile" element={<UserProfile />} />
-  </Route>
-</Route>
+      <Route element={<ProtectedRoute allowedRoles={['user']} />}>
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/dashboard/my-bookings" element={<MyBookings />} />
+          <Route path="/dashboard/trip-planner" element={<TripPlanner />} />
+          <Route path="/dashboard/make-a-trip" element={<MakeATrip />} />
+          <Route path="/dashboard/explore-places" element={<ExplorePlaces />} />
+          <Route path="/dashboard/profile" element={<UserProfile />} />
+        </Route>
+      </Route>
 
 // --- GUIDE Dashboard Routes (Only accessible by guides) ---
 <Route element={<ProtectedRoute allowedRoles={['guide']} />}>
