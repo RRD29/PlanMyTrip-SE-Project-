@@ -14,41 +14,16 @@ const getMyProfile = async () => {
 };
 
 /**
- * Updates the profile for the currently logged-in user.
- * @param {object} profileData - { fullName, ...other fields }
+ * Updates the profile for the currently logged-in user using FormData.
+ * This now handles text AND file uploads in one request.
+ * @param {FormData} profileFormData - A FormData object containing all text and file fields
  * @returns {Promise<object>} The updated user profile object
  */
-const updateMyProfile = async (profileData) => {
+const updateMyProfile = async (profileFormData) => {
   try {
-    const response = await api.patch('/users/profile', profileData);
-    return response.data.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-/**
- * Updates the guide profile with complete fields.
- * @param {object} profileData - Complete guide profile data
- * @returns {Promise<object>} The updated user profile object
- */
-const updateGuideProfile = async (profileData) => {
-  try {
-    const response = await api.patch('/users/profile/guide', profileData);
-    return response.data.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-/**
- * Uploads avatar for the user.
- * @param {FormData} formData - FormData containing the avatar file
- * @returns {Promise<object>} The updated user profile object
- */
-const uploadAvatar = async (formData) => {
-  try {
-    const response = await api.post('/users/avatar', formData, {
+    // Send the FormData. Axios will automatically set the
+    // 'Content-Type': 'multipart/form-data' header.
+    const response = await api.patch('/users/profile', profileFormData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -86,31 +61,12 @@ const verifyPhoneOTP = async (data) => {
   }
 };
 
-/**
- * Uploads an identity document.
- * @param {string} field - The field name (e.g., 'aadhaarCard', 'panCard').
- * @param {FormData} formData - The form data containing the file.
- * @returns {Promise<object>} The updated user profile object
- */
-const uploadIdentityDoc = async (field, formData) => {
-  try {
-    const response = await api.post(`/users/upload-identity/${field}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
+// Export the consolidated service functions
 export const userService = {
   getMyProfile,
-  updateMyProfile,
-  updateGuideProfile,
-  uploadAvatar,
+  updateMyProfile, // This is the only update function needed now
   sendPhoneOTP,
   verifyPhoneOTP,
-  uploadIdentityDoc,
+  // updateGuideProfile, uploadAvatar, and uploadIdentityDoc are removed
+  // as their logic is now inside updateMyProfile
 };
