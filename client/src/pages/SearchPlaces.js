@@ -12,6 +12,8 @@ const SearchPlaces = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [images, setImages] = useState([]);
   const [imagesLoading, setImagesLoading] = useState(false);
+  const [weather, setWeather] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
   const inputRef = useRef(null);
   const debounceTimer = useRef(null);
 
@@ -109,6 +111,43 @@ const SearchPlaces = () => {
     }
   };
 
+  // Fetch weather for a place
+  const fetchWeather = async (placeName) => {
+    setWeatherLoading(true);
+    try {
+      // First, geocode the place to get coordinates
+      const geoResponse = await axios.get(
+        `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(placeName)}&apiKey=${process.env.REACT_APP_GEOAPIFY_API_KEY}`
+      );
+
+      if (!geoResponse.data.features || geoResponse.data.features.length === 0) {
+        console.error('Could not geocode place for weather');
+        setWeather(null);
+        return;
+      }
+
+      const [lng, lat] = geoResponse.data.features[0].geometry.coordinates;
+
+      // Fetch weather data from OpenWeatherMap
+      const weatherResponse = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=bb9b1cc74b30047f0f6662a4725c19ef&units=metric`
+      );
+
+      setWeather({
+        temperature: Math.round(weatherResponse.data.main.temp),
+        precipitation: weatherResponse.data.rain ? weatherResponse.data.rain['1h'] || 0 : 0,
+        description: weatherResponse.data.weather[0].description,
+        icon: weatherResponse.data.weather[0].icon,
+        location: weatherResponse.data.name
+      });
+    } catch (err) {
+      console.error('Error fetching weather:', err);
+      setWeather(null);
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
+
   const handleSearch = async (searchQuery = query) => {
     if (!searchQuery.trim()) return;
 
@@ -118,6 +157,7 @@ const SearchPlaces = () => {
     setShowSuggestions(false);
     setShowHistory(false);
     setImages([]);
+    setWeather(null);
 
     saveToHistory(searchQuery);
 
@@ -135,6 +175,8 @@ const SearchPlaces = () => {
         setResults([summary]);
         // Fetch images for the place
         fetchImages(searchQuery.trim());
+        // Fetch weather for the place
+        fetchWeather(searchQuery.trim());
       }
     } catch (err) {
       if (err.response && err.response.status === 404) {
@@ -283,6 +325,32 @@ const SearchPlaces = () => {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Weather Section */}
+            {(weather || weatherLoading) && (
+              <div className="p-6 bg-blue-50 border-b border-blue-200">
+                <h3 className="text-xl font-semibold mb-4 text-blue-800">Current Weather</h3>
+                {weatherLoading ? (
+                  <div className="text-center text-blue-600 py-4">Loading weather...</div>
+                ) : weather ? (
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+                      alt={weather.description}
+                      className="w-16 h-16"
+                    />
+                    <div>
+                      <p className="text-2xl font-bold text-blue-900">{weather.temperature}°C</p>
+                      <p className="text-blue-700 capitalize">{weather.description}</p>
+                      <p className="text-sm text-blue-600">Precipitation: {weather.precipitation} mm</p>
+                      <p className="text-sm text-blue-600">Location: {weather.location}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-blue-600">Weather data not available</p>
                 )}
               </div>
             )}

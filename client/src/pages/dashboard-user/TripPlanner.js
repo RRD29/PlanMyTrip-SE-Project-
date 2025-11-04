@@ -5,6 +5,7 @@ import GeoapifyMapWrapper from '../../components/map/GeoapifyMapWrapper'; // Ass
 import Button from '../../components/common/Button'; // Assuming you use this Button component
 import Modal from '../../components/common/Modal'; // Import Modal component
 import { useBooking } from '../../contexts/BookingContext'; // Assuming you use this hook
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import axios from 'axios';
 
 // Default map center (e.g., center of the US)
@@ -24,6 +25,10 @@ const TripPlanner = () => {
 
     // State for the simple input field
     const [addressInput, setAddressInput] = useState('');
+
+    // Autocomplete suggestions
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
     
     // State to manage map view and markers
     const [mapCenter, setMapCenter] = useState(initialCenter);
@@ -52,9 +57,105 @@ const TripPlanner = () => {
     const [placeImages, setPlaceImages] = useState([]);
     const [placeDetailsLoading, setPlaceDetailsLoading] = useState(false);
     const [isPlaceDetailsModalOpen, setIsPlaceDetailsModalOpen] = useState(false);
+    const [placeWeather, setPlaceWeather] = useState(null);
+    const [placeWeatherLoading, setPlaceWeatherLoading] = useState(false);
+    const [isWeatherModalOpen, setIsWeatherModalOpen] = useState(false);
+    const [selectedWeatherPlace, setSelectedWeatherPlace] = useState(null);
+    const [tripDates, setTripDates] = useState([]);
 
 
     // --- Handlers ---
+
+    // Fetch autocomplete suggestions
+    const fetchSuggestions = async (query) => {
+        if (!query.trim()) {
+            setSuggestions([]);
+            return;
+        }
+
+        try {
+            const res = await axios.get(
+                `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(
+                    query
+                )}&apiKey=${process.env.REACT_APP_GEOAPIFY_API_KEY}&limit=5`
+            );
+
+            const features = res.data.features || [];
+            const suggestionList = features.map((feature) => ({
+                name: feature.properties.formatted,
+                lat: feature.geometry.coordinates[1],
+                lon: feature.geometry.coordinates[0],
+            }));
+            setSuggestions(suggestionList);
+        } catch (err) {
+            console.error("Autocomplete error", err);
+            setSuggestions([]);
+        }
+    };
+
+    // Handle input change with debouncing
+    const handleAddressInputChange = (e) => {
+        const value = e.target.value;
+        setAddressInput(value);
+        setShowSuggestions(value.length > 0);
+
+        // Debounce suggestions
+        if (value.length > 2) {
+            const timeoutId = setTimeout(() => fetchSuggestions(value), 300);
+            return () => clearTimeout(timeoutId);
+        } else {
+            setSuggestions([]);
+        }
+    };
+
+    // Handle suggestion selection
+    const handleSuggestionClick = (suggestion) => {
+        setAddressInput(suggestion.name);
+        setShowSuggestions(false);
+        // Trigger search with the selected suggestion
+        const input = suggestion.name;
+        const cityDetected = isCity(input);
+        setIsCitySearch(cityDetected);
+
+        if (cityDetected) {
+            performCitySearch(input, radius);
+        } else {
+            // Regular geocoding for specific addresses
+            handleGeocodeAndAddMarkerFromSuggestion(suggestion);
+        }
+    };
+
+    // Add marker from suggestion
+    const handleGeocodeAndAddMarkerFromSuggestion = async (suggestion) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const newPlace = {
+                name: suggestion.name,
+                lat: suggestion.lat,
+                lng: suggestion.lon,
+                info: suggestion.name,
+                distance: 'N/A', // Not applicable for single place
+                budget: Math.floor(Math.random() * 100) + 50, // Mock budget
+                accommodation: `Hotel near ${suggestion.name}` // Mock accommodation
+            };
+
+            // Update state
+            if (!itinerary.find(p => p.name === newPlace.name)) {
+                setItinerary(prev => [...prev, newPlace]);
+                // Center map on the new place
+                setMapCenter([newPlace.lat, newPlace.lng]);
+                setZoom(14);
+            }
+
+        } catch (err) {
+            console.error("Geocoding error", err);
+            setError(err.message || 'Error finding places. Please try a different query.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Helper function to detect if input is a city
     const isCity = (input) => {
@@ -171,6 +272,17 @@ const TripPlanner = () => {
         }
     };
 
+    // Handle drag and drop reordering
+    const handleDragEnd = (result) => {
+        if (!result.destination) return;
+
+        const items = Array.from(itinerary);
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderedItem);
+
+        setItinerary(items);
+    };
+
     // Function to generate dated itinerary
     const generateDatedItinerary = useCallback(() => {
         if (!startDate || !endDate || itinerary.length === 0) return;
@@ -207,6 +319,21 @@ const TripPlanner = () => {
     // Generate dated itinerary when dates or itinerary change
     useEffect(() => {
         generateDatedItinerary();
+        // Generate trip dates array
+        if (startDate && endDate) {
+            const dates = [];
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            for (let i = 0; i < totalDays; i++) {
+                const date = new Date(start);
+                date.setDate(start.getDate() + i);
+                dates.push(date.toISOString().split('T')[0]);
+            }
+            setTripDates(dates);
+        } else {
+            setTripDates([]);
+        }
     }, [startDate, endDate, itinerary, generateDatedItinerary]);
 
     // Re-run search when radius changes if a city was previously searched
@@ -344,6 +471,64 @@ const TripPlanner = () => {
         fetchPlaceDetails(place.name);
     };
 
+    // Function to fetch current weather for a place
+    const fetchWeatherForPlace = async (place) => {
+        setPlaceWeatherLoading(true);
+        try {
+            // Geocode the place to get coordinates
+            const geoResponse = await axios.get(
+                `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(place.name)}&apiKey=${process.env.REACT_APP_GEOAPIFY_API_KEY}`
+            );
+
+            if (!geoResponse.data.features || geoResponse.data.features.length === 0) {
+                throw new Error('Could not find coordinates for this place');
+            }
+
+            const [lng, lat] = geoResponse.data.features[0].geometry.coordinates;
+
+            // Fetch current weather
+            const weatherResponse = await axios.get(
+                `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=bb9b1cc74b30047f0f6662a4725c19ef&units=metric`
+            );
+
+            const weatherData = {
+                temperature: Math.round(weatherResponse.data.main.temp),
+                precipitation: weatherResponse.data.rain ? weatherResponse.data.rain['1h'] || 0 : 0,
+                description: weatherResponse.data.weather[0].description,
+                icon: weatherResponse.data.weather[0].icon,
+                humidity: weatherResponse.data.main.humidity,
+                windSpeed: weatherResponse.data.wind.speed
+            };
+
+            setPlaceWeather({
+                location: place.name,
+                weather: weatherData
+            });
+        } catch (err) {
+            console.error('Error fetching weather:', err);
+            setPlaceWeather({
+                location: place.name,
+                weather: {
+                    temperature: 'N/A',
+                    precipitation: 'N/A',
+                    description: 'Weather data unavailable',
+                    icon: '01d',
+                    humidity: 'N/A',
+                    windSpeed: 'N/A'
+                }
+            });
+        } finally {
+            setPlaceWeatherLoading(false);
+        }
+    };
+
+    // Function to handle weather check
+    const handleCheckWeather = (place) => {
+        setSelectedWeatherPlace(place);
+        setIsWeatherModalOpen(true);
+        fetchWeatherForPlace(place);
+    };
+
     // Function to download schedule as text file
     const downloadSchedule = () => {
         const schedulesToDownload = savedSchedules.length > 0 ? savedSchedules : datedItinerary.map(day => ({
@@ -452,15 +637,30 @@ const TripPlanner = () => {
                         <label className="block text-sm font-medium text-gray-700">
                             Search Destinations
                         </label>
-                        <div className="flex space-x-2 mt-1">
+                        <div className="flex space-x-2 mt-1 relative">
                             <input
                                 type="text"
                                 value={addressInput}
-                                onChange={(e) => setAddressInput(e.target.value)}
+                                onChange={handleAddressInputChange}
+                                onFocus={() => setShowSuggestions(addressInput.length > 0)}
+                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                 placeholder="Enter city (e.g., Delhi, Mumbai) or specific address..."
                                 disabled={loading}
                                 className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             />
+                            {showSuggestions && suggestions.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-b-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                                    {suggestions.map((suggestion, index) => (
+                                        <div
+                                            key={index}
+                                            onClick={() => handleSuggestionClick(suggestion)}
+                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                        >
+                                            {suggestion.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                             <Button
                                 onClick={handleGeocodeAndAddMarker}
                                 loading={loading}
@@ -517,43 +717,74 @@ const TripPlanner = () => {
                     <h2 className="text-xl font-semibold text-gray-800">Your Itinerary ({itinerary.length})</h2>
                     {itinerary.length === 0 ? (
                         <p className="text-gray-500 mt-2">Search for a city or place to add to your trip.</p>
-                    ) : datedItinerary.length === 0 ? (
-                        <p className="text-gray-500 mt-2">Set start and end dates to see the dated plan.</p>
                     ) : (
-                        <div className="mt-4 space-y-4 max-h-96 overflow-y-auto">
-                            {datedItinerary.map((day, dayIndex) => (
-                                <div key={dayIndex} className="p-3 bg-gray-50 rounded-md border">
-                                    <h3 className="font-semibold text-gray-800">{new Date(day.date).toDateString()}</h3>
-                                    <ul className="mt-2 space-y-2">
-                                        {day.places.map((place, placeIndex) => (
-                                            <li key={placeIndex} className="flex items-center justify-between">
-                                                <div className="text-sm text-gray-700 flex-1">
-                                                    <button
-                                                        onClick={() => handlePlaceClick(place)}
-                                                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline text-left"
-                                                    >
-                                                        {place.name}
-                                                    </button>
-                                                    {place.imageUrl && (
-                                                        <img src={place.imageUrl} alt={place.name} className="w-full h-32 object-cover rounded-md mt-2" />
-                                                    )}
-                                                    {isCitySearch && (
-                                                        <div className="text-xs text-gray-600 mt-1">
-                                                            <p><strong>Opening Hours:</strong> {place.openingHours}</p>
-                                                            <p><strong>Distance:</strong> {place.distance} km</p>
-                                                            <p><strong>Approx. Budget:</strong> ${place.budget}</p>
-                                                            <p><strong>Accommodation:</strong> {place.accommodation}</p>
+                        <div className="mt-4">
+                            <DragDropContext onDragEnd={handleDragEnd}>
+                                <Droppable droppableId="itinerary">
+                                    {(provided) => (
+                                        <div
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                            className="space-y-2 max-h-96 overflow-y-auto"
+                                        >
+                                            {itinerary.map((place, index) => (
+                                                <Draggable key={place.name} draggableId={place.name} index={index}>
+                                                    {(provided, snapshot) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
+                                                            className={`p-3 bg-gray-50 rounded-md border flex items-center justify-between cursor-move ${
+                                                                snapshot.isDragging ? 'shadow-lg bg-white' : ''
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-center space-x-3">
+                                                                <div className="text-gray-400">
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                                                    </svg>
+                                                                </div>
+                                                                <div className="text-sm text-gray-700 flex-1">
+                                                                    <button
+                                                                        onClick={() => handlePlaceClick(place)}
+                                                                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline text-left"
+                                                                    >
+                                                                        {place.name}
+                                                                    </button>
+                                                                    {place.imageUrl && (
+                                                                        <img src={place.imageUrl} alt={place.name} className="w-full h-32 object-cover rounded-md mt-2" />
+                                                                    )}
+                                                                    {isCitySearch && (
+                                                                        <div className="text-xs text-gray-600 mt-1">
+                                                                            <p><strong>Opening Hours:</strong> {place.openingHours}</p>
+                                                                            <p><strong>Distance:</strong> {place.distance} km</p>
+                                                                            <p><strong>Approx. Budget:</strong> ${place.budget}</p>
+                                                                            <p><strong>Accommodation:</strong> {place.accommodation}</p>
+                                                                            <button
+                                                                                onClick={() => handleCheckWeather(place)}
+                                                                                className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+                                                                            >
+                                                                                Check Weather
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <button onClick={() => removeFromItinerary(place.name)} className="text-gray-400 hover:text-red-500 ml-2">
+                                                                <CloseIcon className="w-5 h-5" />
+                                                            </button>
                                                         </div>
                                                     )}
-                                                </div>
-                                                <button onClick={() => removeFromItinerary(place.name)} className="text-gray-400 hover:text-red-500 ml-2">
-                                                    <CloseIcon className="w-5 h-5" />
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </div>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                            {datedItinerary.length === 0 && (
+                                <p className="text-gray-500 mt-2">Set start and end dates to see the dated plan.</p>
+                            )}
                         </div>
                     )}
                 </div>
@@ -594,6 +825,65 @@ const TripPlanner = () => {
                     markers={mapMarkers}
                 />
             </div>
+
+            {/* --- Weather Modal --- */}
+            <Modal
+                isOpen={isWeatherModalOpen}
+                onClose={() => {
+                    setIsWeatherModalOpen(false);
+                    setSelectedWeatherPlace(null);
+                    setPlaceWeather(null);
+                }}
+                title={selectedWeatherPlace ? `${selectedWeatherPlace.name} - Current Weather` : "Weather Information"}
+                size="lg"
+            >
+                <div className="space-y-4">
+                    {placeWeatherLoading ? (
+                        <div className="text-center py-8">
+                            <div className="text-gray-500">Loading weather data...</div>
+                        </div>
+                    ) : placeWeather && placeWeather.weather ? (
+                        <div>
+                            <h3 className="text-xl font-semibold mb-4 text-center">{placeWeather.location}</h3>
+                            <div className="bg-blue-50 p-6 rounded-lg border text-center">
+                                <div className="flex items-center justify-center mb-4">
+                                    <img
+                                        src={`https://openweathermap.org/img/wn/${placeWeather.weather.icon}@2x.png`}
+                                        alt={placeWeather.weather.description}
+                                        className="w-16 h-16"
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <p className="text-3xl font-bold text-blue-600">{placeWeather.weather.temperature}°C</p>
+                                    <p className="text-lg text-gray-700 capitalize">{placeWeather.weather.description}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <p className="font-medium">Precipitation</p>
+                                        <p>{placeWeather.weather.precipitation} mm</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Humidity</p>
+                                        <p>{placeWeather.weather.humidity}%</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Wind Speed</p>
+                                        <p>{placeWeather.weather.windSpeed} m/s</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Last Updated</p>
+                                        <p>{new Date().toLocaleTimeString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-8">
+                            <div className="text-gray-500">Weather data not available for this location.</div>
+                        </div>
+                    )}
+                </div>
+            </Modal>
 
             {/* --- Place Details Modal --- */}
             <Modal
