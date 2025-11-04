@@ -1,10 +1,9 @@
-import React, { useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useMemo, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix for default Leaflet icon not showing up in React
-// The property name is '_getIconUrl' with a leading underscore and no spaces.
+// Fix Leaflet default icon issue in React
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -13,49 +12,64 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-// Define the tile URL using the environment variable
+// Geoapify tiles URL
 const GEOAPIFY_API_KEY = process.env.REACT_APP_GEOAPIFY_API_KEY;
 const TILE_URL = `https://maps.geoapify.com/v1/tile/osm-carto/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_API_KEY}`;
 
+// Component to control map center updates
+const MapController = ({ center, zoom }) => {
+  const map = useMap();
 
-const GeoapifyMapWrapper = ({ center, zoom = 13, markers = [] }) => {
-  // Center prop for Leaflet must be an array: [latitude, longitude]
-  const defaultCenter = [0, 0]; 
+  useEffect(() => {
+    if (center && center.length === 2 && center[0] !== 0 && center[1] !== 0) {
+      map.setView(center, zoom);
+    }
+  }, [center, zoom, map]);
+
+  return null;
+};
+
+const GeoapifyMapWrapper = ({ center, zoom = 13, markers = [], route = [] }) => {
+  const defaultCenter = [39.8283, -98.5795]; // Fallback center (USA)
   const mapCenter = center && center.length === 2 ? center : defaultCenter;
 
-  // Memoize the map to prevent unnecessary re-renders, improving performance
   const displayMap = useMemo(
     () => (
       <MapContainer
         center={mapCenter}
         zoom={zoom}
         style={{ height: '500px', width: '100%', zIndex: 1 }}
-        scrollWheelZoom={false} // Prevents unwanted zoom with scroll
+        scrollWheelZoom={false}
       >
+        <MapController center={center} zoom={zoom} />
+
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Powered by <a href="https://www.geoapify.com/">Geoapify</a>'
+          attribution='&copy; OpenStreetMap contributors | Geoapify'
           url={TILE_URL}
         />
-        
-        {/* Render Markers for each location */}
+
+        {/* Show markers */}
         {markers.map((marker, index) => (
-          <Marker 
-            key={index} 
-            position={[marker.lat, marker.lng]} // Marker position: [latitude, longitude]
-          >
+          <Marker key={index} position={[marker.lat, marker.lng]}>
             {marker.info && <Popup>{marker.info}</Popup>}
           </Marker>
         ))}
+
+        {/* ✅ Draw route if exist */}
+        {route.length > 0 && (
+          <Polyline
+            positions={route.map(coord => [coord.lat, coord.lng])}
+            weight={5}
+            opacity={0.8}
+            color="blue"
+          />
+        )}
       </MapContainer>
     ),
-    [mapCenter, zoom, markers]
+    [mapCenter, zoom, markers, center, route]
   );
 
-  return (
-      <div className="map-container">
-          {displayMap}
-      </div>
-  );
+  return <div className="map-container">{displayMap}</div>;
 };
 
 export default GeoapifyMapWrapper;

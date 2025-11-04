@@ -80,6 +80,9 @@ const Navbar = () => {
                 <NavLink to="/" className={navLinkClass} end>
                   Home
                 </NavLink>
+                <NavLink to="/search-places" className={navLinkClass}>
+                  Search Places
+                </NavLink>
                 {/* --- HIDE "Find Guides" for logged-in guides --- */}
                 {(!user || user.role !== 'guide') && (
                   <NavLink to="/guides" className={navLinkClass}>
@@ -153,6 +156,9 @@ const Navbar = () => {
           <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
             <NavLink to="/" className={mobileNavLinkClass} end>
               Home
+            </NavLink>
+            <NavLink to="/search-places" className={mobileNavLinkClass}>
+              Search Places
             </NavLink>
             {/* --- HIDE "Find Guides" for logged-in guides --- */}
             {(!user || user.role !== 'guide') && (

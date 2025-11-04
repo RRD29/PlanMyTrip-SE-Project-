@@ -226,3 +226,148 @@ export const calculateDistance = (lat1, lng1, lat2, lng2) => {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
+
+
+/**
+ * Fetch road route between multiple waypoints using Geoapify Routing API.
+ * @param {Array} waypoints array of {lat, lng}
+ * @returns {Array} polyline coordinates
+ */
+export const getRoadRoute = async (waypoints) => {
+  const GEOAPIFY_API_KEY = process.env.REACT_APP_GEOAPIFY_API_KEY;
+
+  const waypointStr = waypoints.map(w => `${w.lat},${w.lng}`).join("|");
+
+  const url = `https://api.geoapify.com/v1/routing?waypoints=${waypointStr}&mode=drive&details=route&apiKey=${GEOAPIFY_API_KEY}`;
+
+  const response = await axios.get(url);
+  const coords = response.data.features[0].geometry.coordinates[0]
+    .map(([lng, lat]) => ({ lat, lng }));
+
+  return coords;
+};
+
+/**
+ * Fetches nearby places using Geoapify Places API based on categories.
+ * @param {number} lat Latitude of the center point.
+ * @param {number} lng Longitude of the center point.
+ * @param {Array<string>} categories Array of category strings (e.g., ['accommodation.hotel', 'catering.restaurant']).
+ * @param {number} radius Radius in meters (default 5000).
+ * @param {number} limit Number of places to fetch (default 20).
+ * @returns {Promise<Array>} Array of place objects with basic info.
+ */
+export const fetchNearbyPlaces = async (lat, lng, categories, radius = 5000, limit = 20) => {
+  if (!GEOAPIFY_API_KEY) {
+    throw new Error("Geoapify API key is missing. Check your .env file.");
+  }
+
+  const categoriesStr = categories.join(',');
+  const url = `https://api.geoapify.com/v2/places?categories=${categoriesStr}&filter=circle:${lng},${lat},${radius}&limit=${limit}&apiKey=${GEOAPIFY_API_KEY}`;
+
+  try {
+    const response = await axios.get(url);
+    const features = response.data.features;
+
+    if (features && features.length > 0) {
+      return features.map(feature => ({
+        place_id: feature.properties.place_id,
+        name: feature.properties.name || 'Unnamed Place',
+        address: feature.properties.formatted || feature.properties.address_line1 || 'Address not available',
+        categories: feature.properties.categories || [],
+        lat: feature.geometry.coordinates[1],
+        lng: feature.geometry.coordinates[0],
+        distance: feature.properties.distance || null
+      }));
+    }
+
+    return [];
+  } catch (error) {
+    console.error('Geoapify Nearby Places Error:', error.message || error);
+    throw new Error(`Failed to fetch nearby places: ${error.message}`);
+  }
+};
+
+/**
+ * Fetches detailed information for a specific place using Geoapify Place Details API.
+ * @param {string} placeId The place ID from the places search.
+ * @returns {Promise<object>} Detailed place information including website, phone, photos, rating, etc.
+ */
+export const fetchPlaceDetails = async (placeId) => {
+  if (!GEOAPIFY_API_KEY) {
+    throw new Error("Geoapify API key is missing. Check your .env file.");
+  }
+
+  const url = `https://api.geoapify.com/v2/place-details?id=${placeId}&apiKey=${GEOAPIFY_API_KEY}`;
+
+  try {
+    const response = await axios.get(url);
+    const feature = response.data.features[0];
+
+    if (feature) {
+      const properties = feature.properties;
+      const datasource = properties.datasource?.raw || {};
+
+      return {
+        place_id: properties.place_id,
+        name: properties.name || 'Unnamed Place',
+        address: properties.formatted || properties.address_line1 || 'Address not available',
+        categories: properties.categories || [],
+        lat: feature.geometry.coordinates[1],
+        lng: feature.geometry.coordinates[0],
+        website: datasource.website || datasource.contact?.website || null,
+        phone: datasource.phone || datasource.contact?.phone || null,
+        email: datasource.email || datasource.contact?.email || null,
+        opening_hours: datasource.opening_hours || null,
+        rating: datasource.rating || null,
+        photos: datasource.image ? [datasource.image] : [], // Geoapify may provide image URLs
+        description: datasource.description || null,
+        amenities: datasource.amenities || [],
+        cuisine: datasource.cuisine || null,
+        price_range: datasource.price_range || null
+      };
+    }
+
+    throw new Error('Place details not found.');
+  } catch (error) {
+    console.error('Geoapify Place Details Error:', error.message || error);
+    throw new Error(`Failed to fetch place details: ${error.message}`);
+  }
+};
+
+/**
+ * Fetches autocomplete suggestions for cities and places using Geoapify Autocomplete API.
+ * @param {string} text The text to autocomplete.
+ * @param {number} limit Number of suggestions to fetch (default 5).
+ * @returns {Promise<Array>} Array of suggestion objects with { text, lat, lng, type }.
+ */
+export const fetchAutocompleteSuggestions = async (text, limit = 5) => {
+  if (!GEOAPIFY_API_KEY) {
+    throw new Error("Geoapify API key is missing. Check your .env file.");
+  }
+
+  if (!text || text.trim().length < 2) {
+    return [];
+  }
+
+  // Geoapify Autocomplete API endpoint, limiting to cities and places
+  const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(text.trim())}&limit=${limit}&type=city,place&apiKey=${GEOAPIFY_API_KEY}`;
+
+  try {
+    const response = await axios.get(url);
+    const features = response.data.features;
+
+    if (features && features.length > 0) {
+      return features.map(feature => ({
+        text: feature.properties.formatted || feature.properties.address_line1 || 'Unknown',
+        lat: feature.geometry.coordinates[1],
+        lng: feature.geometry.coordinates[0],
+        type: feature.properties.result_type || 'place'
+      }));
+    }
+
+    return [];
+  } catch (error) {
+    console.error('Geoapify Autocomplete Error:', error.message || error);
+    throw new Error(`Failed to fetch autocomplete suggestions: ${error.message}`);
+  }
+};
