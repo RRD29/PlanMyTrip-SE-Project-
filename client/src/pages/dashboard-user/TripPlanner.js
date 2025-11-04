@@ -343,34 +343,18 @@ const TripPlanner = () => {
         }
     }, [radius, lastSearchedCity, performCitySearch]);
 
-    const handleCreateTrip = async () => {
-        if (!startDate || !endDate || itinerary.length === 0) {
-            alert('Please select at least one destination and set your trip dates.');
+    // --- THIS IS THE EDITED FUNCTION ---
+    const handleFindGuides = () => {
+        if (!lastSearchedCity) {
+            alert('Please search for a city destination first.');
             return;
         }
 
-        const mockBookingData = {
-            guideId: '6902625ed7c12a36953fe528', // Real guide ID from database
-            tripDetails: {
-                destination: itinerary[0].name,
-                startDate: startDate,
-                endDate: endDate,
-                itinerary: itinerary.map(({ name, lat, lng }) => ({ name, lat, lng })), // Ensure clean data for backend
-            },
-            startDate: startDate,
-            endDate: endDate,
-            totalAmount: 250,
-        };
-
-        try {
-            const { booking } = await createBooking(mockBookingData);
-            navigate(`/booking/${booking._id}`);
-
-        } catch (err) {
-            console.error(err);
-            alert('Failed to create trip. Please try again.');
-        }
+        // Navigate to guides page with the last searched city as query param
+        const destination = lastSearchedCity;
+        navigate(`/guides?destination=${encodeURIComponent(destination)}`);
     };
+    // --- END OF EDIT ---
 
     // Function to initialize editable schedules
     const initializeEditableSchedules = () => {
@@ -803,11 +787,10 @@ const TripPlanner = () => {
                         <Button
                             size="lg"
                             className="flex-1"
-                            onClick={handleCreateTrip}
-                            loading={isCreatingBooking}
-                            disabled={itinerary.length === 0 || isCreatingBooking || !startDate || !endDate}
+                            onClick={handleFindGuides}
+                            disabled={itinerary.length === 0}
                         >
-                            {isCreatingBooking ? 'Creating...' : 'Find Guides & Book'}
+                            Find Guides
                         </Button>
                     </div>
                     <p className="text-xs text-gray-500 text-center">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/common/Button';
 import heroImage from '../assets/images/hero-background.jpg';
 
@@ -49,60 +49,73 @@ const itemVariants = {
 
 const Home = () => {
   const navigate = useNavigate();
-  const [featuredGuides, setFeaturedGuides] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const [currentBgIndex, setCurrentBgIndex] = useState(0);
 
-  // Mock API call to fetch featured guides
+  const backgroundImages = [
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop',
+    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&h=1080&fit=crop',
+    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&h=1080&fit=crop',
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop',
+    'https://images.unsplash.com/photo-1464822759844-d150f39b8b3c?w=1920&h=1080&fit=crop'
+  ];
+
+  const reviews = [
+    {
+      id: 1,
+      name: 'Sarah Johnson',
+      location: 'New York, USA',
+      rating: 5,
+      review: 'Amazing experience! My guide was incredibly knowledgeable and made our trip unforgettable.',
+      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      id: 2,
+      name: 'Michael Chen',
+      location: 'London, UK',
+      rating: 5,
+      review: 'The best way to explore a new city. Highly recommend to anyone planning a trip!',
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      id: 3,
+      name: 'Emma Rodriguez',
+      location: 'Barcelona, Spain',
+      rating: 4,
+      review: 'Great service and professional guides. Will definitely book again for our next adventure.',
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      id: 4,
+      name: 'David Kim',
+      location: 'Tokyo, Japan',
+      rating: 5,
+      review: 'Outstanding cultural insights and hidden gems. Made our trip truly special.',
+      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+    },
+    {
+      id: 5,
+      name: 'Lisa Thompson',
+      location: 'Paris, France',
+      rating: 5,
+      review: 'Exceptional experience from start to finish. The guide was passionate and informative.',
+      image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face'
+    }
+  ];
+
   useEffect(() => {
-    const fetchFeaturedGuides = async () => {
-      try {
-        // Simulate API call with mock data
-        const mockData = [
-          {
-            id: 1,
-            name: 'Maria Rodriguez',
-            location: 'Barcelona, Spain',
-            rating: 4.9,
-            reviews: 127,
-            specialties: ['Cultural Tours', 'Food & Wine'],
-            image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=300&fit=crop&crop=face',
-            description: 'Passionate local guide with 8 years of experience showing visitors the hidden gems of Barcelona.'
-          },
-          {
-            id: 2,
-            name: 'Ahmed Hassan',
-            location: 'Cairo, Egypt',
-            rating: 4.8,
-            reviews: 89,
-            specialties: ['Historical Sites', 'Desert Adventures'],
-            image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&crop=face',
-            description: 'Expert in Egyptian history and culture, offering authentic experiences in the land of pharaohs.'
-          },
-          {
-            id: 3,
-            name: 'Yuki Tanaka',
-            location: 'Tokyo, Japan',
-            rating: 5.0,
-            reviews: 203,
-            specialties: ['Modern Culture', 'Traditional Temples'],
-            image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=300&fit=crop&crop=face',
-            description: 'Native Tokyoite who blends traditional Japanese culture with contemporary experiences.'
-          }
-        ];
+    const interval = setInterval(() => {
+      setCurrentReviewIndex((prevIndex) => (prevIndex + 1) % reviews.length);
+    }, 5000); // Rotate every 5 seconds
+    return () => clearInterval(interval);
+  }, [reviews.length]);
 
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setFeaturedGuides(mockData);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load featured guides. Please try again later.');
-        setLoading(false);
-      }
-    };
-
-    fetchFeaturedGuides();
-  }, []);
+  useEffect(() => {
+    const bgInterval = setInterval(() => {
+      setCurrentBgIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+    }, 4000); // Rotate background every 4 seconds
+    return () => clearInterval(bgInterval);
+  }, [backgroundImages.length]);
 
   return (
     <div className="bg-white">
@@ -114,10 +127,17 @@ const Home = () => {
         transition={{ duration: 1 }}
       >
         {/* Background Image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentBgIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${backgroundImages[currentBgIndex]})` }}
+          />
+        </AnimatePresence>
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/60" />
 
@@ -157,7 +177,7 @@ const Home = () => {
 
       {/* --- How It Works Section --- */}
       <motion.section
-        className="py-20 bg-gray-50"
+        className="py-20 bg-blue-50"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
@@ -225,7 +245,7 @@ const Home = () => {
         </div>
       </motion.section>
 
-      {/* --- Featured Guides Section --- */}
+      {/* --- Reviews by Users Section --- */}
       <section className="py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.h2
@@ -235,95 +255,55 @@ const Home = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            Featured Guides
+            Reviews by Users
           </motion.h2>
 
-          {loading && (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          )}
-
-          {error && (
-            <div className="text-center py-12">
-              <p className="text-red-600 text-lg">{error}</p>
-              <Button
-                onClick={() => window.location.reload()}
-                className="mt-4"
-                variant="secondary"
+          <div className="flex justify-center">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentReviewIndex}
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5 }}
+                className="w-full max-w-md bg-white rounded-lg shadow-lg p-6"
               >
-                Try Again
-              </Button>
-            </div>
-          )}
-
-          {!loading && !error && (
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              {featuredGuides.map((guide) => (
-                <motion.div
-                  key={guide.id}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-                  variants={itemVariants}
-                  whileHover={{ y: -5 }}
-                  transition={{ duration: 0.2 }}
-                >
+                <div className="flex items-center mb-4">
                   <img
-                    src={guide.image}
-                    alt={guide.name}
-                    className="w-full h-48 object-cover"
+                    src={reviews[currentReviewIndex].image}
+                    alt={reviews[currentReviewIndex].name}
+                    className="w-12 h-12 rounded-full mr-4"
                   />
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {guide.name}
-                    </h3>
-                    <p className="text-gray-600 mb-3 flex items-center">
-                      <MapPinIcon className="w-4 h-4 mr-1" />
-                      {guide.location}
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{reviews[currentReviewIndex].name}</h4>
+                    <p className="text-sm text-gray-600 flex items-center">
+                      <MapPinIcon className="w-3 h-3 mr-1" />
+                      {reviews[currentReviewIndex].location}
                     </p>
-                    <div className="flex items-center mb-3">
-                      <div className="flex items-center">
-                        <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
-                        <span className="ml-1 text-gray-900 font-medium">
-                          {guide.rating}
-                        </span>
-                      </div>
-                      <span className="ml-2 text-gray-600">
-                        ({guide.reviews} reviews)
-                      </span>
-                    </div>
-                    <div className="mb-4">
-                      <div className="flex flex-wrap gap-2">
-                        {guide.specialties.map((specialty, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                          >
-                            {specialty}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-4">
-                      {guide.description}
-                    </p>
-                    <Button
-                      onClick={() => navigate(`/guide/${guide.id}`)}
-                      className="w-full"
-                      size="sm"
-                    >
-                      View Profile
-                    </Button>
                   </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
+                </div>
+                <div className="flex items-center mb-3">
+                  {[...Array(reviews[currentReviewIndex].rating)].map((_, i) => (
+                    <StarIcon key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-700 italic">"{reviews[currentReviewIndex].review}"</p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Dots indicator */}
+          <div className="flex justify-center mt-8 space-x-2">
+            {reviews.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentReviewIndex(index)}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  index === currentReviewIndex ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -362,7 +342,7 @@ const Home = () => {
           >
             <Button
               size="lg"
-              className="px-10 py-4 text-lg bg-white text-blue-600 hover:bg-gray-100"
+              className="px-10 py-4 text-lg bg-black text-white hover:bg-gray-800"
               onClick={() => navigate("/register")}
             >
               Get Started Today
