@@ -92,7 +92,53 @@ export const loginUser = asyncHandler(async (req, res) => {
 export const logoutUser = asyncHandler(async (req, res) => { /* ... logout logic ... */ });
 
 // --- Forgot Password ---
-export const forgotPassword = asyncHandler(async (req, res) => { /* ... forgot password logic ... */ });
+export const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        throw new ApiError(400, "Email is required");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        // For security, don't reveal if user exists or not
+        return res.status(200).json(new ApiResponse(200, {}, "If an account with that email exists, a password reset link has been sent."));
+    }
+
+    const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+
+    await sendPasswordResetEmail(user.email, resetToken);
+
+    return res.status(200).json(new ApiResponse(200, {}, "Password reset link sent to your email."));
+});
 
 // --- Reset Password ---
-export const resetPassword = asyncHandler(async (req, res) => { /* ... reset password logic ... */ });
+export const resetPassword = asyncHandler(async (req, res) => {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+        throw new ApiError(400, "Password is required");
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+        throw new ApiError(400, "Token is invalid or has expired");
+    }
+
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    await user.save();
+
+    return res.status(200).json(new ApiResponse(200, {}, "Password reset successfully"));
+});
