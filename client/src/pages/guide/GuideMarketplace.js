@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import useApi from '../../hooks/useApi'; // <-- NOW USED
 import { PageLoader, SkeletonText } from '../../components/common/Loaders';
 import Button from '../../components/common/Button';
@@ -56,16 +56,23 @@ const GuideCard = ({ guide }) => {
 
 // --- Main Marketplace Page ---
 const GuideMarketplace = () => {
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState(searchParams.get('destination') || ''); // Pre-fill location from URL
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [minRating, setMinRating] = useState('');
   const [minExperience, setMinExperience] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState({});
+  
+  // This state holds the filters that are *actually* being sent to the API
+  const [appliedFilters, setAppliedFilters] = useState({
+    destination: searchParams.get('destination') || '',
+    location: '',
+    search: '',
+  });
 
-  // Build query parameters for API call based on applied filters
+  // Build query parameters for API call
   const queryParams = useMemo(() => {
     const params = {};
     if (appliedFilters.search) params.search = appliedFilters.search;
@@ -74,13 +81,30 @@ const GuideMarketplace = () => {
     if (appliedFilters.maxPrice) params.maxPrice = appliedFilters.maxPrice;
     if (appliedFilters.minRating) params.minRating = appliedFilters.minRating;
     if (appliedFilters.minExperience) params.minExperience = appliedFilters.minExperience;
+    if (appliedFilters.destination) params.destination = appliedFilters.destination;
     return params;
   }, [appliedFilters]);
 
   // --- USING REAL API HERE ---
+  // The hook automatically runs on mount with the initial queryParams
   const { data: guides, loading, error, request } = useApi('/guides', { params: queryParams, method: 'GET' });
 
+  // This effect will re-run the API call *only* if the destination in the URL changes
+  useEffect(() => {
+    const destination = searchParams.get('destination');
+    if (destination) {
+      setLocation(destination); // Update the input field
+      const newFilters = { ...appliedFilters, destination: destination, location: '' };
+      setAppliedFilters(newFilters);
+      request('/guides', { params: newFilters, method: 'GET' });
+    }
+    // We only want this to run when the searchParams (URL) changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // This function is called when the user clicks the "Search" or "Apply Filters" buttons
   const applyAllFilters = () => {
+    const destination = searchParams.get('destination');
     const newFilters = {
       search: searchTerm,
       location: location,
@@ -88,7 +112,14 @@ const GuideMarketplace = () => {
       maxPrice: maxPrice,
       minRating: minRating,
       minExperience: minExperience,
+      // If a destination is in the URL, it overrides the 'location' input for filtering
+      destination: destination || location, 
     };
+    
+    if (destination) {
+        newFilters.location = ''; // Use destination for expertise search
+    }
+
     setAppliedFilters(newFilters);
     // Manually trigger API call with new params
     request('/guides', { params: newFilters, method: 'GET' });
@@ -98,10 +129,16 @@ const GuideMarketplace = () => {
     return <p className="text-red-500 text-center p-8">Error: {error}</p>;
   }
 
+  const destinationFromUrl = searchParams.get('destination');
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">Find Your Perfect Guide</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-8">
+          {destinationFromUrl 
+            ? `Guides for your trip to ${destinationFromUrl}` 
+            : "Find Your Perfect Guide"}
+        </h1>
 
         {/* --- Filter Bar --- */}
         <div className="mb-8 p-6 bg-white rounded-lg shadow border">
@@ -121,11 +158,11 @@ const GuideMarketplace = () => {
               <span className="text-sm text-gray-600">Search by name or location</span>
             </div>
             <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>
+              <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location / Destination</label>
               <input
                 type="text"
                 id="location"
-                value={location}
+                value={location} // This is pre-filled from the URL
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g., 'Paris', 'Tokyo'"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
