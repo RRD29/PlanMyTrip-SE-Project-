@@ -5,6 +5,7 @@ import {
   UserIcon,
   CalendarIcon,
   MapPinIcon,
+  HomeIcon,
   // CurrencyDollarIcon - Can be used if you want a dedicated Earnings link
 } from '../../assets/icons';
 
@@ -18,6 +19,7 @@ const SidebarIcon = ({ icon: IconComponent, colorClass }) => (
 // User Navigation (Standard Blue Theme)
 const UserNav = () => (
   <>
+    <DashboardNavLink to="/" icon={HomeIcon} color="blue">Home</DashboardNavLink>
     <DashboardNavLink to="/dashboard" icon={UserIcon} color="blue">My Dashboard</DashboardNavLink>
     <DashboardNavLink to="/dashboard/my-bookings" icon={CalendarIcon} color="blue">My Bookings</DashboardNavLink>
     <DashboardNavLink to="/dashboard/trip-planner" icon={MapPinIcon} color="blue">Trip Planner</DashboardNavLink>
@@ -29,6 +31,7 @@ const UserNav = () => (
 // Guide Navigation (Earning/Service Focused - Green Theme)
 const GuideNav = () => (
   <>
+    <DashboardNavLink to="/" icon={HomeIcon} color="green">Home</DashboardNavLink>
     <DashboardNavLink to="/dashboard-guide" icon={UserIcon} color="green">My Earnings</DashboardNavLink>
     <DashboardNavLink to="/dashboard-guide/booking-requests" icon={CalendarIcon} color="green">Booking Requests</DashboardNavLink>
     <DashboardNavLink to="/dashboard-guide/my-availability" icon={MapPinIcon} color="green">Availability</DashboardNavLink>
@@ -39,6 +42,7 @@ const GuideNav = () => (
 
 const AdminNav = () => (
   <>
+    <DashboardNavLink to="/" icon={HomeIcon} color="red">Home</DashboardNavLink>
     <DashboardNavLink to="/dashboard-admin" icon={UserIcon} color="red">Overview</DashboardNavLink>
     <DashboardNavLink to="/dashboard-admin/manage-users" icon={CalendarIcon} color="red">Manage Users</DashboardNavLink>
     <DashboardNavLink to="/dashboard-admin/transactions" icon={MapPinIcon} color="red">Escrow</DashboardNavLink>
