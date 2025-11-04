@@ -5,24 +5,221 @@ import { PageLoader } from '../../components/common/Loaders';
 import { userService } from '../../services/user.service';
 import { useNavigate } from 'react-router-dom';
 
-const UserProfile = () => {
-  const { user: authUser, loading: authLoading, setUser: setAuthUser } = useAuth(); // Get setUser to update context
-  const [currentUser, setCurrentUser] = useState(authUser);
+// Helper for input styling
+const inputStyle = "px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500";
 
-  // Form state - Initialize with potentially fetched data
+// =========================================================================
+// --- DUMB COMPONENTS (Used to organize the massive form fields) ---
+// =========================================================================
+
+const TravellerFields = (props) => (
+    <>
+        <h2 className="text-xl font-semibold border-t pt-4 mt-4">Traveller Profile</h2>
+        
+        {/* Phone Number */}
+        <div>
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <input type="tel" id="phoneNumber" value={props.phoneNumber} onChange={(e) => props.setPhoneNumber(e.target.value)} className={`mt-1 block w-full ${inputStyle}`}/>
+            {/* You can add OTP logic for travellers here too if needed */}
+        </div>
+        
+        {/* Gender & DOB */}
+        <div className="grid grid-cols-2 gap-4">
+          <div><label htmlFor="travellerGender" className="block text-sm font-medium text-gray-700">Gender</label><select id="travellerGender" value={props.travellerGender} onChange={(e) => props.setTravellerGender(e.target.value)} className={`mt-1 block w-full ${inputStyle}`}><option value="">Select...</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
+          <div><label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">Date of Birth</label><input type="date" id="dateOfBirth" value={props.dateOfBirth} onChange={(e) => props.setDateOfBirth(e.target.value)} className={`mt-1 block w-full ${inputStyle}`}/></div>
+        </div>
+        
+        {/* Address */}
+        <div className="grid grid-cols-2 gap-4">
+          <div><label htmlFor="city" className="block text-sm font-medium text-gray-700">City</label><input type="text" id="city" value={props.address.city} onChange={(e) => props.setAddress({ ...props.address, city: e.target.value })} className={`mt-1 block w-full ${inputStyle}`}/></div>
+          <div><label htmlFor="state" className="block text-sm font-medium text-gray-700">State</label><input type="text" id="state" value={props.address.state} onChange={(e) => props.setAddress({ ...props.address, state: e.target.value })} className={`mt-1 block w-full ${inputStyle}`}/></div>
+          <div><label htmlFor="country" className="block text-sm font-medium text-gray-700">Country</label><input type="text" id="country" value={props.address.country} onChange={(e) => props.setAddress({ ...props.address, country: e.target.value })} className={`mt-1 block w-full ${inputStyle}`}/></div>
+          <div><label htmlFor="pincode" className="block text-sm font-medium text-gray-700">Pincode</label><input type="text" id="pincode" value={props.address.pincode} onChange={(e) => props.setAddress({ ...props.address, pincode: e.target.value })} className={`mt-1 block w-full ${inputStyle}`}/></div>
+        </div>
+
+        <h3 className="text-lg font-medium pt-4 border-t">Preferences & Bio</h3>
+        
+        {/* Preferred Travel Style */}
+        <div><label htmlFor="preferredTravelStyle" className="block text-sm font-medium text-gray-700">Preferred Travel Style</label>
+        <select multiple id="preferredTravelStyle" value={props.preferredTravelStyle} onChange={(e) => props.setPreferredTravelStyle(Array.from(e.target.selectedOptions, option => option.value))} className={`mt-1 block w-full ${inputStyle} h-24`}>
+            <option value="Adventure">Adventure</option>
+            <option value="Relaxation">Relaxation</option>
+            <option value="Cultural">Cultural</option>
+            <option value="Nature">Nature</option>
+            <option value="Luxury">Luxury</option>
+            <option value="Budget">Budget</option>
+        </select></div>
+        
+        {/* Languages, Food, Bio */}
+        <div className="grid grid-cols-2 gap-4">
+            <div><label htmlFor="preferredLanguages" className="block text-sm font-medium text-gray-700">Preferred Languages</label><input type="text" id="preferredLanguages" value={props.preferredLanguages} onChange={(e) => props.setPreferredLanguages(e.target.value)} placeholder="e.g., English, Hindi" className={`mt-1 block w-full ${inputStyle}`}/></div>
+            <div><label htmlFor="foodPreference" className="block text-sm font-medium text-gray-700">Food Preference</label><select id="foodPreference" value={props.foodPreference} onChange={(e) => props.setFoodPreference(e.target.value)} className={`mt-1 block w-full ${inputStyle}`}><option value="">Select...</option><option value="Veg">Veg</option><option value="Non-Veg">Non-Veg</option></select></div>
+        </div>
+        <div><label htmlFor="profileBio" className="block text-sm font-medium text-gray-700">Profile Bio</label><textarea id="profileBio" rows={3} value={props.profileBio} onChange={(e) => props.setProfileBio(e.target.value)} placeholder="Tell us about yourself..." className={`mt-1 block w-full ${inputStyle}`}></textarea></div>
+    </>
+);
+
+const GuidePublicFields = (props) => (
+    <>
+        <h2 className="text-xl font-semibold border-t pt-4 mt-4">Public Guide Information</h2>
+        
+        <div className="grid grid-cols-2 gap-4">
+            <div><label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth *</label><input type="date" id="dob" value={props.dob} onChange={(e) => props.setDob(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
+            <div><label htmlFor="gender" className="block text-sm font-medium text-gray-700">Gender *</label><select id="gender" value={props.gender} onChange={(e) => props.setGender(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}><option value="">Select...</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
+        </div>
+
+        <div>
+            <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">Contact Number *</label>
+            <div className="flex space-x-2">
+              <input type="tel" id="contactNumber" value={props.contactNumber} onChange={(e) => props.setContactNumber(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/>
+              {!props.otpVerified && (
+                <Button onClick={props.handleSendOTP} type="button" size="sm" disabled={!props.contactNumber}>
+                  {props.otpSent ? 'Resend OTP' : 'Send OTP'}
+                </Button>
+              )}
+              {props.otpVerified && <span className="text-green-600 mt-2">✓ Verified</span>}
+            </div>
+            {props.otpSent && !props.otpVerified && (
+              <div className="mt-2 flex space-x-2">
+                <input type="text" placeholder="Enter OTP" value={props.otp} onChange={(e) => props.setOtp(e.target.value)} className={`flex-1 ${inputStyle}`}/>
+                <Button onClick={props.handleVerifyOTP} type="button" size="sm">Verify</Button>
+              </div>
+            )}
+        </div>
+        
+        <h3 className="text-lg font-medium border-t pt-4">Professional Details</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+            <div><label htmlFor="baseLocation" className="block text-sm font-medium text-gray-700">Base Location *</label><input type="text" id="baseLocation" value={props.baseLocation} onChange={(e) => props.setBaseLocation(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
+            <div><label htmlFor="yearsExperience" className="block text-sm font-medium text-gray-700">Years of Experience *</label><input type="number" id="yearsExperience" value={props.yearsExperience} onChange={(e) => props.setYearsExperience(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
+            <div><label htmlFor="pricePerDay" className="block text-sm font-medium text-gray-700">Price per Day (USD) *</label><input type="number" id="pricePerDay" value={props.pricePerDay} onChange={(e) => props.setPricePerDay(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
+        </div>
+
+        <div><label htmlFor="languages" className="block text-sm font-medium text-gray-700">Languages Spoken (comma-separated) *</label><input type="text" id="languages" value={props.languages} onChange={(e) => props.setLanguages(e.target.value)} placeholder="e.g., English, Hindi, French" className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
+        <div><label htmlFor="expertiseRegions" className="block text-sm font-medium text-gray-700">Local Areas of Expertise (comma-separated) *</label><input type="text" id="expertiseRegions" value={props.expertiseRegions} onChange={(e) => props.setExpertiseRegions(e.target.value)} placeholder="e.g., Paris City Center, Normandy" className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
+        <div><label htmlFor="specialties" className="block text-sm font-medium text-gray-700">Specialties (comma-separated) *</label><input type="text" id="specialties" value={props.specialties} onChange={(e) => props.setSpecialties(e.target.value)} placeholder="e.g., Food Tours, Art History" className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
+        <div><label htmlFor="availabilitySchedule" className="block text-sm font-medium text-gray-700">Availability Schedule (Description) *</label><textarea id="availabilitySchedule" rows={2} value={props.availabilitySchedule} onChange={(e) => props.setAvailabilitySchedule(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}></textarea></div>
+        <div><label htmlFor="bio" className="block text-sm font-medium text-gray-700">About Me (Public Bio) *</label><textarea id="bio" rows={4} value={props.bio} onChange={(e) => props.setBio(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}></textarea></div>
+    </>
+);
+
+const GuidePrivateFields = (props) => (
+    <>
+        <h2 className="text-xl font-semibold border-t pt-4 mt-4">Private Verification & Payment</h2>
+        <p className="text-sm text-gray-600 mb-4">This information is **only** visible to the site Admin. Files must be re-uploaded if you wish to change them.</p>
+
+        <h3 className="text-lg font-medium">Verification Documents (Required)</h3>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div><label htmlFor="aadhaarNumber" className="block text-sm font-medium text-gray-700">Aadhaar Number *</label><input type="text" id="aadhaarNumber" value={props.aadhaarNumber} onChange={(e) => props.setAadhaarNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
+          <div><label htmlFor="panNumber" className="block text-sm font-medium text-gray-700">PAN Number *</label><input type="text" id="panNumber" value={props.panNumber} onChange={(e) => props.setPanNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
+          <div><label htmlFor="tourismLicenseNumber" className="block text-sm font-medium text-gray-700">Tourism License No. (Optional)</label><input type="text" id="tourismLicenseNumber" value={props.tourismLicenseNumber} onChange={(e) => props.setTourismLicenseNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`}/></div>
+          <div><label htmlFor="policeVerificationNumber" className="block text-sm font-medium text-gray-700">Police Verification No. *</label><input type="text" id="policeVerificationNumber" value={props.policeVerificationNumber} onChange={(e) => props.setPoliceVerificationNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
+        </div>
+
+        {/* --- THIS IS THE UPDATED FILE UPLOAD SECTION --- */}
+        <div className="grid grid-cols-2 gap-4 mt-4">
+            
+            <FileUploadField
+              label="Aadhaar Card (Image/PDF) *"
+              name="aadhaarCard"
+              fileUrl={props.aadhaarCardUrl}
+              newFile={props.aadhaarCardFile}
+              onChange={props.handleFileChange}
+            />
+            <FileUploadField
+              label="PAN Card (Image/PDF) *"
+              name="panCard"
+              fileUrl={props.panCardUrl}
+              newFile={props.panCardFile}
+              onChange={props.handleFileChange}
+            />
+            <FileUploadField
+              label="Tourism License Proof (Optional)"
+              name="tourismLicense"
+              fileUrl={props.tourismLicenseUrl}
+              newFile={props.tourismLicenseFile}
+              onChange={props.handleFileChange}
+            />
+            <FileUploadField
+              label="Police Verification Certificate *"
+              name="policeVerification"
+              fileUrl={props.policeVerificationUrl}
+              newFile={props.policeVerificationFile}
+              onChange={props.handleFileChange}
+            />
+
+        </div>
+        
+        <h3 className="text-lg font-medium pt-4 border-t mt-4">Payment Details (Required for Payouts)</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div><label htmlFor="bankAccountName" className="block text-sm font-medium text-gray-700">Bank Account Name *</label><input type="text" id="bankAccountName" value={props.bankAccountName} onChange={(e) => props.setBankAccountName(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
+          <div><label htmlFor="bankAccountNumber" className="block text-sm font-medium text-gray-700">Bank Account Number *</label><input type="text" id="bankAccountNumber" value={props.bankAccountNumber} onChange={(e) => props.setBankAccountNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
+          <div><label htmlFor="bankIFSC" className="block text-sm font-medium text-gray-700">Bank IFSC Code *</label><input type="text" id="bankIFSC" value={props.bankIFSC} onChange={(e) => props.setBankIFSC(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
+          <div><label htmlFor="upiId" className="block text-sm font-medium text-gray-700">UPI ID (Optional)</label><input type="text" id="upiId" value={props.upiId} onChange={(e) => props.setUpiId(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`}/></div>
+        </div>
+    </>
+);
+
+// --- Reusable File Input Component ---
+const FileUploadField = ({ label, name, fileUrl, newFile, onChange }) => (
+    <div>
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700">{label}</label>
+        {/* If a URL exists and no new file is being staged, show the "View" link */}
+        {fileUrl && !newFile ? (
+            <div className="mt-1">
+                <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-green-600 hover:text-green-800">
+                    ✓ View Uploaded Document
+                </a>
+                {/* "Change" button that clicks the hidden input */}
+                <label htmlFor={name} className="cursor-pointer text-sm text-blue-500 hover:underline ml-3">Change</label>
+                <input type="file" id={name} name={name} onChange={onChange} className="sr-only"/>
+            </div>
+        ) : (
+            // Otherwise, show the file input
+            <>
+                <input type="file" id={name} name={name} onChange={onChange} className="mt-1 text-sm"/>
+                {newFile && <p className="text-xs text-blue-600 mt-1">New: {newFile.name} (Ready to upload)</p>}
+            </>
+        )}
+    </div>
+);
+
+
+// =========================================================================
+// --- MAIN USER PROFILE COMPONENT ---
+// =========================================================================
+
+const UserProfile = () => {
+  const { user: authUser, loading: authLoading, setUser: setAuthUser } = useAuth();
+  const [currentUser, setCurrentUser] = useState(authUser);
+  const navigate = useNavigate();
+
+  // --- STATE ---
+  // Basic
   const [fullName, setFullName] = useState('');
+  // Traveller fields
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [travellerGender, setTravellerGender] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [address, setAddress] = useState({ city: '', state: '', country: '', pincode: '' });
+  const [preferredTravelStyle, setPreferredTravelStyle] = useState([]);
+  const [preferredLanguages, setPreferredLanguages] = useState(''); 
+  const [foodPreference, setFoodPreference] = useState('');
+  const [profileBio, setProfileBio] = useState('');
+  // Guide fields
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [baseLocation, setBaseLocation] = useState('');
   const [yearsExperience, setYearsExperience] = useState('');
-  const [languages, setLanguages] = useState(''); // Simple comma-separated for now
+  const [languages, setLanguages] = useState('');
   const [expertiseRegions, setExpertiseRegions] = useState('');
   const [specialties, setSpecialties] = useState('');
   const [availabilitySchedule, setAvailabilitySchedule] = useState('');
   const [pricePerDay, setPricePerDay] = useState('');
   const [bio, setBio] = useState('');
-  // Identity verification fields
+  // Identity/Payment text fields
   const [aadhaarNumber, setAadhaarNumber] = useState('');
   const [panNumber, setPanNumber] = useState('');
   const [tourismLicenseNumber, setTourismLicenseNumber] = useState('');
@@ -31,28 +228,52 @@ const UserProfile = () => {
   const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [bankIFSC, setBankIFSC] = useState('');
   const [upiId, setUpiId] = useState('');
-  // OTP verification
+  // OTP
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
-  // Avatar upload
+
+  // --- FILE STATES ---
   const [avatarFile, setAvatarFile] = useState(null);
+  const [aadhaarCardFile, setAadhaarCardFile] = useState(null);
+  const [panCardFile, setPanCardFile] = useState(null);
+  const [tourismLicenseFile, setTourismLicenseFile] = useState(null);
+  const [policeVerificationFile, setPoliceVerificationFile] = useState(null);
+
+  // --- URL/STATUS STATES ---
   const [avatarPreview, setAvatarPreview] = useState('');
-  // Document URLs for display
   const [aadhaarCardUrl, setAadhaarCardUrl] = useState('');
   const [panCardUrl, setPanCardUrl] = useState('');
   const [tourismLicenseUrl, setTourismLicenseUrl] = useState('');
   const [policeVerificationUrl, setPoliceVerificationUrl] = useState('');
-  // Track upload status for each document
-  const [aadhaarCardUploaded, setAadhaarCardUploaded] = useState(false);
-  const [panCardUploaded, setPanCardUploaded] = useState(false);
-  const [tourismLicenseUploaded, setTourismLicenseUploaded] = useState(false);
-  const [policeVerificationUploaded, setPoliceVerificationUploaded] = useState(false);
-
-  const [loading, setLoading] = useState(true); // Start loading true
+  
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
-  const navigate = useNavigate();
+
+  // --- SINGLE FILE CHANGE HANDLER ---
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    const name = e.target.name; 
+    
+    if (!file) return;
+
+    if (name === 'avatar') {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    } else if (name === 'aadhaarCard') {
+      setAadhaarCardFile(file);
+    } else if (name === 'panCard') {
+      setPanCardFile(file);
+    } else if (name === 'tourismLicense') {
+      setTourismLicenseFile(file);
+    } else if (name === 'policeVerification') {
+      setPoliceVerificationFile(file);
+    }
+  };
+
+  // Helper to parse comma-separated strings
+  const parseArrayString = (arr) => Array.isArray(arr) ? arr.join(', ') : (arr || '');
 
   // --- Fetch Profile On Load ---
   useEffect(() => {
@@ -61,39 +282,51 @@ const UserProfile = () => {
     userService.getMyProfile()
       .then(fetchedUser => {
         setCurrentUser(fetchedUser);
-        // Initialize form fields from fetched data
         setFullName(fetchedUser.fullName || '');
-        setDob(fetchedUser.guideProfile?.dob ? fetchedUser.guideProfile.dob.split('T')[0] : '');
-        setGender(fetchedUser.guideProfile?.gender || '');
-        setContactNumber(fetchedUser.guideProfile?.contactNumber || '');
-        setBaseLocation(fetchedUser.guideProfile?.baseLocation || '');
-        setYearsExperience(fetchedUser.guideProfile?.yearsExperience || '');
-        setLanguages(fetchedUser.guideProfile?.languages?.join(', ') || '');
-        setExpertiseRegions(fetchedUser.guideProfile?.expertiseRegions?.join(', ') || '');
-        setSpecialties(fetchedUser.guideProfile?.specialties?.join(', ') || '');
-        setAvailabilitySchedule(fetchedUser.guideProfile?.availabilitySchedule || '');
-        setPricePerDay(fetchedUser.guideProfile?.pricePerDay || '');
-        setBio(fetchedUser.guideProfile?.bio || '');
-        setAadhaarNumber(fetchedUser.identityVerification?.aadhaarNumber || '');
-        setPanNumber(fetchedUser.identityVerification?.panNumber || '');
-        setTourismLicenseNumber(fetchedUser.identityVerification?.tourismLicenseNumber || '');
-        setPoliceVerificationNumber(fetchedUser.identityVerification?.policeVerificationNumber || '');
-        // Set document URLs for display
-        setAadhaarCardUrl(fetchedUser.identityVerification?.aadhaarCard || '');
-        setPanCardUrl(fetchedUser.identityVerification?.panCard || '');
-        setTourismLicenseUrl(fetchedUser.identityVerification?.tourismLicense || '');
-        setPoliceVerificationUrl(fetchedUser.identityVerification?.policeVerification || '');
-        // Set upload status based on whether documents exist
-        setAadhaarCardUploaded(!!fetchedUser.identityVerification?.aadhaarCard);
-        setPanCardUploaded(!!fetchedUser.identityVerification?.panCard);
-        setTourismLicenseUploaded(!!fetchedUser.identityVerification?.tourismLicense);
-        setPoliceVerificationUploaded(!!fetchedUser.identityVerification?.policeVerification);
-        setBankAccountName(fetchedUser.paymentDetails?.bankAccountName || '');
-        setBankAccountNumber(fetchedUser.paymentDetails?.bankAccountNumber || '');
-        setBankIFSC(fetchedUser.paymentDetails?.bankIFSC || '');
-        setUpiId(fetchedUser.paymentDetails?.upiId || '');
-        setOtpVerified(fetchedUser.guideProfile?.isContactVerified || false);
         setAvatarPreview(fetchedUser.avatar || '');
+
+        if (fetchedUser.travellerProfile) {
+            setPhoneNumber(fetchedUser.travellerProfile.phoneNumber || '');
+            setTravellerGender(fetchedUser.travellerProfile.gender || '');
+            setDateOfBirth(fetchedUser.travellerProfile.dateOfBirth ? fetchedUser.travellerProfile.dateOfBirth.split('T')[0] : '');
+            setAddress(fetchedUser.travellerProfile.address || { city: '', state: '', country: '', pincode: '' });
+            setPreferredTravelStyle(fetchedUser.travellerProfile.preferredTravelStyle || []);
+            setPreferredLanguages(parseArrayString(fetchedUser.travellerProfile.preferredLanguages));
+            setFoodPreference(fetchedUser.travellerProfile.foodPreference || '');
+            setProfileBio(fetchedUser.travellerProfile.profileBio || '');
+        }
+
+        if (fetchedUser.guideProfile) {
+            setDob(fetchedUser.guideProfile.dob ? fetchedUser.guideProfile.dob.split('T')[0] : '');
+            setGender(fetchedUser.guideProfile.gender || '');
+            setContactNumber(fetchedUser.guideProfile.contactNumber || '');
+            setBaseLocation(fetchedUser.guideProfile.baseLocation || '');
+            setYearsExperience(fetchedUser.guideProfile.yearsExperience || '');
+            setLanguages(parseArrayString(fetchedUser.guideProfile.languages));
+            setExpertiseRegions(parseArrayString(fetchedUser.guideProfile.expertiseRegions));
+            setSpecialties(parseArrayString(fetchedUser.guideProfile.specialties));
+            setAvailabilitySchedule(fetchedUser.guideProfile.availabilitySchedule || '');
+            setPricePerDay(fetchedUser.guideProfile.pricePerDay || '');
+            setBio(fetchedUser.guideProfile.bio || '');
+            setOtpVerified(fetchedUser.guideProfile.isContactVerified || false);
+        }
+
+        if (fetchedUser.identityVerification) {
+            setAadhaarNumber(fetchedUser.identityVerification.aadhaarNumber || '');
+            setPanNumber(fetchedUser.identityVerification.panNumber || '');
+            setTourismLicenseNumber(fetchedUser.identityVerification.tourismLicenseNumber || '');
+            setPoliceVerificationNumber(fetchedUser.identityVerification.policeVerificationNumber || '');
+            setAadhaarCardUrl(fetchedUser.identityVerification.aadhaarCard || '');
+            setPanCardUrl(fetchedUser.identityVerification.panCard || '');
+            setTourismLicenseUrl(fetchedUser.identityVerification.tourismLicense || '');
+            setPoliceVerificationUrl(fetchedUser.identityVerification.policeVerification || '');
+        }
+        if (fetchedUser.paymentDetails) {
+            setBankAccountName(fetchedUser.paymentDetails.bankAccountName || '');
+            setBankAccountNumber(fetchedUser.paymentDetails.bankAccountNumber || '');
+            setBankIFSC(fetchedUser.paymentDetails.bankIFSC || '');
+            setUpiId(fetchedUser.paymentDetails.upiId || '');
+        }
       })
       .catch(err => {
         setMessage('Error fetching profile data.');
@@ -102,74 +335,13 @@ const UserProfile = () => {
       .finally(() => setLoading(false));
   }, [authUser, authLoading]);
 
-  // --- Handle Avatar Upload ---
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => setAvatarPreview(e.target.result);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAvatarUpload = async () => {
-    if (!avatarFile) return;
-    const formData = new FormData();
-    formData.append('avatar', avatarFile);
-    try {
-      const updatedUser = await userService.uploadAvatar(formData);
-      setCurrentUser(updatedUser);
-      setAuthUser(updatedUser);
-      setAvatarPreview(updatedUser.avatar);
-      setMessage('Avatar uploaded successfully!');
-    } catch (err) {
-      setMessage('Failed to upload avatar.');
-      console.error(err);
-    }
-  };
-
-  // --- Handle Identity Document Upload ---
-  const handleIdentityUpload = async (field, file) => {
-    if (!file) return;
-    const formData = new FormData();
-    formData.append(field, file);
-    try {
-      const updatedUser = await userService.uploadIdentityDoc(field, formData);
-      setCurrentUser(updatedUser);
-      setAuthUser(updatedUser);
-      // Update the specific document URL state
-      if (field === 'aadhaarCard') {
-        setAadhaarCardUrl(updatedUser.identityVerification?.aadhaarCard || '');
-        setAadhaarCardUploaded(true);
-      }
-      if (field === 'panCard') {
-        setPanCardUrl(updatedUser.identityVerification?.panCard || '');
-        setPanCardUploaded(true);
-      }
-      if (field === 'tourismLicense') {
-        setTourismLicenseUrl(updatedUser.identityVerification?.tourismLicense || '');
-        setTourismLicenseUploaded(true);
-      }
-      if (field === 'policeVerification') {
-        setPoliceVerificationUrl(updatedUser.identityVerification?.policeVerification || '');
-        setPoliceVerificationUploaded(true);
-      }
-      setMessage(`${field} uploaded successfully!`);
-    } catch (err) {
-      setMessage(`Failed to upload ${field}.`);
-      console.error(err);
-    }
-  };
-
   // --- Handle OTP ---
-  const handleSendOTP = async () => {
-    if (!contactNumber) {
-      setMessage('Please enter a contact number first.');
-      return;
-    }
+  const handleSendOTP = async (e) => {
+    e.preventDefault();
+    const numberToSend = currentUser.role === 'guide' ? contactNumber : phoneNumber;
+    if (!numberToSend) { setMessage('Please enter a contact number first.'); return; }
     try {
-      await userService.sendPhoneOTP({ phoneNumber: contactNumber });
+      await userService.sendPhoneOTP({ phoneNumber: numberToSend });
       setOtpSent(true);
       setMessage('OTP sent successfully!');
     } catch (err) {
@@ -178,13 +350,12 @@ const UserProfile = () => {
     }
   };
 
-  const handleVerifyOTP = async () => {
-    if (!otp) {
-      setMessage('Please enter the OTP.');
-      return;
-    }
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    const numberToVerify = currentUser.role === 'guide' ? contactNumber : phoneNumber;
+    if (!otp) { setMessage('Please enter the OTP.'); return; }
     try {
-      const updatedUser = await userService.verifyPhoneOTP({ phoneNumber: contactNumber, otp });
+      const updatedUser = await userService.verifyPhoneOTP({ phoneNumber: numberToVerify, otp });
       setCurrentUser(updatedUser);
       setAuthUser(updatedUser);
       setOtpVerified(true);
@@ -196,96 +367,115 @@ const UserProfile = () => {
       console.error(err);
     }
   };
-
-  // --- Handle Complete Profile Submit ---
-  const handleCompleteProfileSubmit = async (e) => {
+  
+  // --- Handle Main Profile Submit (Combined Text and Files) ---
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setMessage('');
 
-    // Validate required fields
-    if (!fullName || !dob || !gender || !contactNumber || !baseLocation || !yearsExperience || !languages || !expertiseRegions || !specialties || !availabilitySchedule || !pricePerDay || !bio || !bankAccountName || !bankAccountNumber || !bankIFSC) {
-      setMessage('Please fill in all required fields.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Validate required document uploads
-    if (!aadhaarCardUploaded || !panCardUploaded || !policeVerificationUploaded) {
-      setMessage('Please upload all required identity documents (Aadhaar Card, PAN Card, Police Verification).');
-      setIsSubmitting(false);
-      return;
-    }
-
-    const profileData = {
-      fullName,
-      dob,
-      gender,
-      contactNumber,
-      baseLocation,
-      yearsExperience: Number(yearsExperience),
-      languages,
-      expertiseRegions,
-      specialties,
-      availabilitySchedule,
-      pricePerDay: Number(pricePerDay),
-      bio,
-      aadhaarNumber,
-      panNumber,
-      tourismLicenseNumber,
-      policeVerificationNumber,
-      bankAccountName,
-      bankAccountNumber,
-      bankIFSC,
-      upiId: upiId || undefined
+    const formData = new FormData();
+    
+    // Helper to append text fields
+    const appendIfPresent = (key, value) => {
+        if (value !== null && value !== undefined && value !== '') {
+            if (key === 'preferredTravelStyle') { // Handle multi-select
+                value.forEach(v => formData.append(`${key}[]`, v));
+            } else if (typeof value === 'object' && value.city !== undefined) {
+                 // Handle address object
+                 formData.append('address[city]', value.city || '');
+                 formData.append('address[state]', value.state || '');
+                 formData.append('address[country]', value.country || '');
+                 formData.append('address[pincode]', value.pincode || '');
+            } else {
+                 formData.append(key, value);
+            }
+        }
     };
+    
+    // --- Append ALL text fields ---
+    appendIfPresent('fullName', fullName);
+    
+    if (currentUser.role === 'user') {
+        appendIfPresent('phoneNumber', phoneNumber);
+        appendIfPresent('gender', travellerGender);
+        appendIfPresent('dateOfBirth', dateOfBirth);
+        appendIfPresent('foodPreference', foodPreference);
+        appendIfPresent('profileBio', profileBio);
+        appendIfPresent('preferredTravelStyle', preferredTravelStyle);
+        appendIfPresent('preferredLanguages', preferredLanguages);
+        appendIfPresent('address', address); 
+    } 
+    
+    if (currentUser.role === 'guide') {
+        // Public Guide Info
+        appendIfPresent('dob', dob);
+        appendIfPresent('gender', gender);
+        appendIfPresent('contactNumber', contactNumber);
+        appendIfPresent('baseLocation', baseLocation);
+        appendIfPresent('yearsExperience', yearsExperience);
+        appendIfPresent('languages', languages);
+        appendIfPresent('expertiseRegions', expertiseRegions);
+        appendIfPresent('specialties', specialties);
+        appendIfPresent('availabilitySchedule', availabilitySchedule);
+        appendIfPresent('pricePerDay', pricePerDay);
+        appendIfPresent('bio', bio);
+        
+        // Private Verification/Payment Text
+        appendIfPresent('aadhaarNumber', aadhaarNumber);
+        appendIfPresent('panNumber', panNumber);
+        appendIfPresent('tourismLicenseNumber', tourismLicenseNumber);
+        appendIfPresent('policeVerificationNumber', policeVerificationNumber);
+        appendIfPresent('bankAccountName', bankAccountName);
+        appendIfPresent('bankAccountNumber', bankAccountNumber);
+        appendIfPresent('bankIFSC', bankIFSC);
+        appendIfPresent('upiId', upiId);
+    }
+
+    // --- Append ALL file fields (if they exist) ---
+    if (avatarFile) formData.append('avatar', avatarFile);
+    if (aadhaarCardFile) formData.append('aadhaarCard', aadhaarCardFile);
+    if (panCardFile) formData.append('panCard', panCardFile);
+    if (tourismLicenseFile) formData.append('tourismLicense', tourismLicenseFile);
+    if (policeVerificationFile) formData.append('policeVerification', policeVerificationFile);
+
+    // --- Validation (Basic client-side check) ---
+    if (currentUser.role === 'guide' && !currentUser.isProfileComplete) {
+        if (!baseLocation || !pricePerDay || !aadhaarNumber || !bankAccountName) { 
+             setMessage('Please fill in all required fields (*) and try again.');
+             setIsSubmitting(false); 
+             return;
+        }
+    }
+    // -----------------------------------------------------
 
     try {
-      const updatedUser = await userService.updateGuideProfile(profileData);
+      const updatedUser = await userService.updateMyProfile(formData);
       setCurrentUser(updatedUser);
-      setAuthUser(updatedUser);
-      setMessage('Profile completed successfully!');
-      // Redirect to guide dashboard
-      navigate('/dashboard-guide');
-    } catch (err) {
-      setMessage('Failed to complete profile. Please try again.');
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // --- Handle Basic Profile Submit ---
-  const handleBasicProfileSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage('');
-
-    const profileData = {
-      fullName,
-      // Only include guideProfile if the user is a guide
-      ...(currentUser.role === 'guide' && {
-          dob: dob || undefined,
-          gender: gender || undefined,
-          contactNumber: contactNumber || undefined,
-          baseLocation: baseLocation || undefined,
-          yearsExperience: yearsExperience ? Number(yearsExperience) : undefined,
-          languages: languages.split(',').map(s => s.trim()).filter(Boolean),
-          expertiseRegions: expertiseRegions.split(',').map(s => s.trim()).filter(Boolean),
-          specialties: specialties.split(',').map(s => s.trim()).filter(Boolean),
-          availabilitySchedule: availabilitySchedule || undefined,
-          pricePerDay: pricePerDay ? Number(pricePerDay) : undefined,
-          bio: bio || undefined,
-      })
-    };
-
-    try {
-      const updatedUser = await userService.updateMyProfile(profileData);
-      setCurrentUser(updatedUser);
-      setAuthUser(updatedUser);
+      setAuthUser(updatedUser); // Update global state
       setMessage('Profile updated successfully!');
+      
+      // --- UPDATE URLS AFTER SAVE ---
+      if (updatedUser.identityVerification) {
+          setAadhaarCardUrl(updatedUser.identityVerification.aadhaarCard || '');
+          setPanCardUrl(updatedUser.identityVerification.panCard || '');
+          setTourismLicenseUrl(updatedUser.identityVerification.tourismLicense || '');
+          setPoliceVerificationUrl(updatedUser.identityVerification.policeVerification || '');
+      }
+      setAvatarPreview(updatedUser.avatar || '');
+
+      // Reset file states so they don't show "new file"
+      setAvatarFile(null);
+      setAadhaarCardFile(null);
+      setPanCardFile(null);
+      setTourismLicenseFile(null);
+      setPoliceVerificationFile(null);
+      
+      if (updatedUser.role === 'guide' && !currentUser.isProfileComplete && updatedUser.isProfileComplete) {
+          navigate('/dashboard-guide');
+      }
     } catch (err) {
-      setMessage('Failed to save changes. Please try again.');
+      setMessage('Failed to save changes. Check server log for validation errors.');
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -298,7 +488,6 @@ const UserProfile = () => {
   if (!currentUser) return null;
 
   const user = currentUser;
-
   const isProfileComplete = user.isProfileComplete;
 
   return (
@@ -308,190 +497,101 @@ const UserProfile = () => {
       {user.role === 'guide' && !isProfileComplete && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           <strong>🧾 Complete Your Guide Profile - Required</strong><br />
-          <p className="mt-2">Your guide profile is incomplete. To access the guide dashboard and appear in the Guide Marketplace, you must:</p>
-          <ul className="mt-2 ml-4 list-disc">
-            <li>Fill in all personal and professional details</li>
-            <li>Upload all required identity documents</li>
-            <li>Verify your mobile number with OTP</li>
-            <li>Provide complete payment information</li>
-          </ul>
-          <p className="mt-2 font-semibold">Complete profiles only will be visible to users booking guides.</p>
+          <p className="mt-2">Your guide profile is incomplete. You must fill all *required fields* and upload necessary documents to be visible in the marketplace.</p>
         </div>
       )}
 
-      <form onSubmit={isProfileComplete ? handleBasicProfileSubmit : handleCompleteProfileSubmit} className="bg-white p-6 rounded-lg shadow border border-gray-200 max-w-2xl space-y-6">
+      {/* The form submission is now a single, unified call */}
+      <form onSubmit={handleProfileSubmit} className="bg-white p-6 rounded-lg shadow border border-gray-200 max-w-4xl space-y-6">
         {message && <p className={`p-3 rounded-md ${message.includes('successfully') ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'}`}>{message}</p>}
 
-        <h2 className="text-xl font-semibold border-b pb-2">Basic Information</h2>
-        {/* Profile Photo Upload */}
+        {/* --- SECTION 1: BASIC INFO & AVATAR --- */}
+        <h2 className="text-xl font-semibold border-b pb-2">Basic Information & Photo</h2>
+        
         <div className="flex items-center space-x-4">
-          <img src={avatarPreview || "https://via.placeholder.com/150"} alt="Avatar" className="w-24 h-24 rounded-full object-cover"/>
+          <img src={avatarPreview || "https://via.placeholder.com/150"} alt="Avatar" className="w-24 h-24 rounded-full object-cover border-2"/>
           <div>
-            <label htmlFor="avatar-upload" className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-800">Change Photo</label>
-            <input id="avatar-upload" name="avatar-upload" type="file" accept="image/*" onChange={handleAvatarChange} className="sr-only"/>
-            {avatarFile && (
-              <Button onClick={handleAvatarUpload} className="ml-2" size="sm">
-                Upload
-              </Button>
-            )}
+            <label htmlFor="avatar-upload" className="block text-sm font-medium text-gray-700">Change Profile Photo</label>
+            <input id="avatar-upload" name="avatar" type="file" accept="image/*" onChange={handleFileChange} className="mt-1 text-sm"/>
+            {avatarFile && <p className="text-xs text-blue-500 mt-1">New: {avatarFile.name} (Ready to upload)</p>}
           </div>
         </div>
-        {/* Full Name */}
-        <div>
-          <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name *</label>
-          <input type="text" id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1 block w-full input-style" required/>
-        </div>
-        {/* Email (Disabled) */}
-        <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email (cannot be changed)</label>
-            <input type="email" id="email" value={user.email} disabled className="mt-1 block w-full input-style bg-gray-100"/>
+        
+        <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name *</label>
+              <input type="text" id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required/>
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email (ID)</label>
+              <input type="email" id="email" value={user.email} disabled className={`mt-1 block w-full ${inputStyle} bg-gray-100`}/>
+            </div>
         </div>
 
-        {/* --- Guide-Only Fields --- */}
+        {/* --- SECTION 2: TRAVELLER PROFILE --- */}
+        {user.role === 'user' && (
+          <TravellerFields
+            phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber}
+            travellerGender={travellerGender} setTravellerGender={setTravellerGender}
+            dateOfBirth={dateOfBirth} setDateOfBirth={setDateOfBirth}
+            address={address} setAddress={setAddress}
+            preferredTravelStyle={preferredTravelStyle} setPreferredTravelStyle={setPreferredTravelStyle}
+            preferredLanguages={preferredLanguages} setPreferredLanguages={setPreferredLanguages}
+            foodPreference={foodPreference} setFoodPreference={setFoodPreference}
+            profileBio={profileBio} setProfileBio={setProfileBio}
+            inputStyle={inputStyle}
+            // Pass OTP props
+            handleSendOTP={handleSendOTP} otpSent={otpSent} otpVerified={otpVerified}
+            otp={otp} setOtp={setOtp} handleVerifyOTP={handleVerifyOTP}
+          />
+        )}
+
+        {/* --- SECTION 3: GUIDE PROFILE (PUBLIC) --- */}
         {user.role === 'guide' && (
-          <>
-            <h2 className="text-xl font-semibold border-t pt-4 mt-4">Public Guide Information</h2>
-            {/* DOB */}
-            <div>
-                <label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth *</label>
-                <input type="date" id="dob" value={dob} onChange={(e) => setDob(e.target.value)} className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-            </div>
-             {/* Gender */}
-            <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Gender *</label>
-                <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)} className="mt-1 block w-full input-style" required={!isProfileComplete}>
-                    <option value="">Select...</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-            {/* Contact Number */}
-            <div>
-                <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">Contact Number *</label>
-                <div className="flex space-x-2">
-                  <input type="tel" id="contactNumber" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-                  {!otpVerified && (
-                    <Button onClick={handleSendOTP} size="sm" disabled={!contactNumber}>
-                      {otpSent ? 'Resend OTP' : 'Send OTP'}
-                    </Button>
-                  )}
-                  {otpVerified && <span className="text-green-600 mt-2">✓ Verified</span>}
-                </div>
-                {otpSent && !otpVerified && (
-                  <div className="mt-2 flex space-x-2">
-                    <input type="text" placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} className="flex-1 input-style"/>
-                    <Button onClick={handleVerifyOTP} size="sm">Verify</Button>
-                  </div>
-                )}
-            </div>
-            {/* Base Location */}
-            <div>
-                <label htmlFor="baseLocation" className="block text-sm font-medium text-gray-700">Current City / Base Location *</label>
-                <input type="text" id="baseLocation" value={baseLocation} onChange={(e) => setBaseLocation(e.target.value)} className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-            </div>
+          <GuidePublicFields
+            dob={dob} setDob={setDob}
+            gender={gender} setGender={setGender}
+            contactNumber={contactNumber} setContactNumber={setContactNumber}
+            baseLocation={baseLocation} setBaseLocation={setBaseLocation}
+            yearsExperience={yearsExperience} setYearsExperience={setYearsExperience}
+            languages={languages} setLanguages={setLanguages}
+            expertiseRegions={expertiseRegions} setExpertiseRegions={setExpertiseRegions}
+            specialties={specialties} setSpecialties={setSpecialties}
+            availabilitySchedule={availabilitySchedule} setAvailabilitySchedule={setAvailabilitySchedule}
+            pricePerDay={pricePerDay} setPricePerDay={setPricePerDay}
+            bio={bio} setBio={setBio}
+            handleSendOTP={handleSendOTP} otpSent={otpSent} otpVerified={otpVerified}
+            otp={otp} setOtp={setOtp} handleVerifyOTP={handleVerifyOTP}
+            isProfileComplete={isProfileComplete}
+            inputStyle={inputStyle}
+          />
+        )}
 
-            <h2 className="text-xl font-semibold border-t pt-4 mt-4">Professional Details</h2>
-            {/* Years Experience */}
-            <div>
-                <label htmlFor="yearsExperience" className="block text-sm font-medium text-gray-700">Years of Experience *</label>
-                <input type="number" id="yearsExperience" value={yearsExperience} onChange={(e) => setYearsExperience(e.target.value)} className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-            </div>
-            {/* Languages */}
-            <div>
-                <label htmlFor="languages" className="block text-sm font-medium text-gray-700">Languages Spoken (comma-separated) *</label>
-                <input type="text" id="languages" value={languages} onChange={(e) => setLanguages(e.target.value)} placeholder="e.g., English, Hindi, French" className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-            </div>
-            {/* Expertise Regions */}
-            <div>
-                <label htmlFor="expertiseRegions" className="block text-sm font-medium text-gray-700">Local Areas of Expertise (comma-separated) *</label>
-                <input type="text" id="expertiseRegions" value={expertiseRegions} onChange={(e) => setExpertiseRegions(e.target.value)} placeholder="e.g., Paris City Center, Normandy" className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-            </div>
-            {/* Specialties */}
-            <div>
-                <label htmlFor="specialties" className="block text-sm font-medium text-gray-700">Specialties (comma-separated) *</label>
-                <input type="text" id="specialties" value={specialties} onChange={(e) => setSpecialties(e.target.value)} placeholder="e.g., Food Tours, Art History" className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-            </div>
-            {/* Availability */}
-            <div>
-                <label htmlFor="availabilitySchedule" className="block text-sm font-medium text-gray-700">Availability Schedule (Description) *</label>
-                <textarea id="availabilitySchedule" rows={3} value={availabilitySchedule} onChange={(e) => setAvailabilitySchedule(e.target.value)} placeholder="e.g., Weekends only, Flexible hours" className="mt-1 block w-full input-style" required={!isProfileComplete}></textarea>
-            </div>
-            {/* Price Per Day */}
-            <div>
-                <label htmlFor="pricePerDay" className="block text-sm font-medium text-gray-700">Price per Day (USD) *</label>
-                <input type="number" id="pricePerDay" value={pricePerDay} onChange={(e) => setPricePerDay(e.target.value)} className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-            </div>
-            {/* Bio */}
-            <div>
-              <label htmlFor="bio" className="block text-sm font-medium text-gray-700">About Me (Public Bio) *</label>
-              <textarea id="bio" rows={4} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell travelers about yourself and your expertise..." className="mt-1 block w-full input-style" required={!isProfileComplete}></textarea>
-            </div>
-
-                <h2 className="text-xl font-semibold border-t pt-4 mt-4">Identity Verification</h2>
-                {/* Aadhaar Card Upload */}
-                <div>
-                    <label htmlFor="aadhaarCard" className="block text-sm font-medium text-gray-700">Aadhaar Card *</label>
-                    <input type="file" id="aadhaarCard" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('aadhaarCard', e.target.files[0])} className="mt-1 block w-full input-style"/>
-                    {aadhaarCardUrl && (
-                        <div className="mt-2">
-                            <a href={aadhaarCardUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View Aadhaar Card</a>
-                        </div>
-                    )}
-                </div>
-                {/* PAN Card Upload */}
-                <div>
-                    <label htmlFor="panCard" className="block text-sm font-medium text-gray-700">PAN Card *</label>
-                    <input type="file" id="panCard" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('panCard', e.target.files[0])} className="mt-1 block w-full input-style"/>
-                    {panCardUrl && (
-                        <div className="mt-2">
-                            <a href={panCardUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View PAN Card</a>
-                        </div>
-                    )}
-                </div>
-                {/* Tourism License Upload */}
-                <div>
-                    <label htmlFor="tourismLicense" className="block text-sm font-medium text-gray-700">Tourism License (Optional)</label>
-                    <input type="file" id="tourismLicense" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('tourismLicense', e.target.files[0])} className="mt-1 block w-full input-style"/>
-                    {tourismLicenseUrl && (
-                        <div className="mt-2">
-                            <a href={tourismLicenseUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View Tourism License</a>
-                        </div>
-                    )}
-                </div>
-                {/* Police Verification Upload */}
-                <div>
-                    <label htmlFor="policeVerification" className="block text-sm font-medium text-gray-700">Police Verification *</label>
-                    <input type="file" id="policeVerification" accept="image/*,application/pdf" onChange={(e) => handleIdentityUpload('policeVerification', e.target.files[0])} className="mt-1 block w-full input-style"/>
-                    {policeVerificationUrl && (
-                        <div className="mt-2">
-                            <a href={policeVerificationUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">View Police Verification</a>
-                        </div>
-                    )}
-                </div>
-
-                <h2 className="text-xl font-semibold border-t pt-4 mt-4">Payment Details</h2>
-                {/* Bank Account Name */}
-                <div>
-                    <label htmlFor="bankAccountName" className="block text-sm font-medium text-gray-700">Bank Account Name *</label>
-                    <input type="text" id="bankAccountName" value={bankAccountName} onChange={(e) => setBankAccountName(e.target.value)} className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-                </div>
-                {/* Bank Account Number */}
-                <div>
-                    <label htmlFor="bankAccountNumber" className="block text-sm font-medium text-gray-700">Bank Account Number *</label>
-                    <input type="text" id="bankAccountNumber" value={bankAccountNumber} onChange={(e) => setBankAccountNumber(e.target.value)} className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-                </div>
-                {/* Bank IFSC */}
-                <div>
-                    <label htmlFor="bankIFSC" className="block text-sm font-medium text-gray-700">Bank IFSC Code *</label>
-                    <input type="text" id="bankIFSC" value={bankIFSC} onChange={(e) => setBankIFSC(e.target.value)} className="mt-1 block w-full input-style" required={!isProfileComplete}/>
-                </div>
-                {/* UPI ID */}
-                <div>
-                    <label htmlFor="upiId" className="block text-sm font-medium text-gray-700">UPI ID (Optional)</label>
-                    <input type="text" id="upiId" value={upiId} onChange={(e) => setUpiId(e.target.value)} className="mt-1 block w-full input-style"/>
-                </div>
-          </>
+        {/* --- SECTION 4: GUIDE VERIFICATION (PRIVATE) --- */}
+        {user.role === 'guide' && (
+          <GuidePrivateFields
+            aadhaarNumber={aadhaarNumber} setAadhaarNumber={setAadhaarNumber}
+            panNumber={panNumber} setPanNumber={setPanNumber}
+            tourismLicenseNumber={tourismLicenseNumber} setTourismLicenseNumber={setTourismLicenseNumber}
+            policeVerificationNumber={policeVerificationNumber} setPoliceVerificationNumber={setPoliceVerificationNumber}
+            bankAccountName={bankAccountName} setBankAccountName={setBankAccountName}
+            bankAccountNumber={bankAccountNumber} setBankAccountNumber={setBankAccountNumber}
+            bankIFSC={bankIFSC} setBankIFSC={setBankIFSC}
+            upiId={upiId} setUpiId={setUpiId}
+            // Pass file states and handler
+            handleFileChange={handleFileChange}
+            aadhaarCardFile={aadhaarCardFile}
+            panCardFile={panCardFile}
+            tourismLicenseFile={tourismLicenseFile}
+            policeVerificationFile={policeVerificationFile}
+            // Pass URLs for display
+            aadhaarCardUrl={aadhaarCardUrl} 
+            panCardUrl={panCardUrl}
+            tourismLicenseUrl={tourismLicenseUrl} 
+            policeVerificationUrl={policeVerificationUrl}
+            isProfileComplete={isProfileComplete}
+            inputStyle={inputStyle}
+          />
         )}
 
         <div className="flex justify-end pt-4 border-t">
@@ -503,10 +603,5 @@ const UserProfile = () => {
     </div>
   );
 };
-
-// Add basic input styling (e.g., in your index.css)
-// .input-style {
-//   @apply px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500;
-// }
 
 export default UserProfile;

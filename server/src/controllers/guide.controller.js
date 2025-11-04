@@ -5,50 +5,54 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 
 // --- Get All Guides (Public Marketplace) ---
 export const getAllGuides = asyncHandler(async (req, res) => {
-    const { location, search, minPrice, maxPrice, minRating, minExperience } = req.query;
+    // 1. Destructure all possible filters
+    const { location, search, minPrice, maxPrice, minRating, minExperience, destination } = req.query;
 
-    const query = {
-        role: 'guide',
-    };
+    // 2. Build the main query using $and to combine all filters
+    const filters = [{ role: 'guide' }];
 
-    // Add location and search filters to the query if they exist
-    const searchConditions = [];
-
-    if (location) {
-        // Search by guideProfile location
-        searchConditions.push({ 'guideProfile.baseLocation': { $regex: location, $options: 'i' } });
-    }
-
+    // 3. Build text-based search conditions ($or)
+    const textSearchConditions = [];
     if (search) {
-        // Search by name OR bio
-        searchConditions.push(
+        textSearchConditions.push(
             { fullName: { $regex: search, $options: 'i' } },
             { 'guideProfile.bio': { $regex: search, $options: 'i' } }
         );
     }
-
-    // If we have search criteria, add them to the main query
-    if (searchConditions.length > 0) {
-        query['$or'] = searchConditions;
+    if (location) {
+        // Your code uses 'location' to search expertiseRegions. We'll keep that.
+        textSearchConditions.push({ 'guideProfile.expertiseRegions': { $regex: location, $options: 'i' } });
+    }
+    if (destination) {
+        // 'destination' also searches expertiseRegions
+        textSearchConditions.push({ 'guideProfile.expertiseRegions': { $regex: destination, $options: 'i' } });
+    }
+    
+    // Add the $or block to the main $and filter if any text search exists
+    if (textSearchConditions.length > 0) {
+        filters.push({ $or: textSearchConditions });
     }
 
-    // Add filter conditions
+    // 4. Build numeric/range filters
     if (minPrice || maxPrice) {
-        query['guideProfile.pricePerDay'] = {};
-        if (minPrice) query['guideProfile.pricePerDay'].$gte = parseFloat(minPrice);
-        if (maxPrice) query['guideProfile.pricePerDay'].$lte = parseFloat(maxPrice);
+        const priceQuery = {};
+        if (minPrice) priceQuery.$gte = parseFloat(minPrice);
+        if (maxPrice) priceQuery.$lte = parseFloat(maxPrice);
+        filters.push({ 'guideProfile.pricePerDay': priceQuery });
     }
-
     if (minRating) {
-        query['guideProfile.rating'] = { $gte: parseFloat(minRating) };
+        filters.push({ 'guideProfile.rating': { $gte: parseFloat(minRating) } });
+    }
+    if (minExperience) {
+        filters.push({ 'guideProfile.yearsExperience': { $gte: parseInt(minExperience) } });
     }
 
-    if (minExperience) {
-        query['guideProfile.yearsExperience'] = { $gte: parseInt(minExperience) };
-    }
+    // 5. Create the final query
+    // If only { role: 'guide' } is present, just use that. Otherwise, combine all with $and.
+    const finalQuery = filters.length > 1 ? { $and: filters } : { role: 'guide' };
 
     // Fetch guides and ensure we select all necessary fields
-    const guides = await User.find(query).select("fullName avatar guideProfile createdAt");
+    const guides = await User.find(finalQuery).select("fullName avatar guideProfile createdAt");
 
     return res.status(200).json(
         new ApiResponse(200, guides, "Guides fetched successfully")
