@@ -22,6 +22,7 @@ const UserNav = () => (
     <DashboardNavLink to="/dashboard/my-bookings" icon={CalendarIcon} color="blue">My Bookings</DashboardNavLink>
     <DashboardNavLink to="/dashboard/trip-planner" icon={MapPinIcon} color="blue">Trip Planner</DashboardNavLink>
     <DashboardNavLink to="/dashboard/make-a-trip" icon={MapPinIcon} color="blue">Make a Trip</DashboardNavLink>
+    <DashboardNavLink to="/dashboard/explore-places" icon={MapPinIcon} color="blue">Explore Places</DashboardNavLink>
     {/* Users see "Find Guides" */}
     <DashboardNavLink to="/guides" icon={MapPinIcon} color="blue">Find Guides</DashboardNavLink>
   </>
