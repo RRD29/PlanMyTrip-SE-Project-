@@ -9,7 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const { login, loading, user } = useAuth(); // Get login function and loading state
+  const { login, loading } = useAuth(); // Removed 'user' as it's not needed here
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,7 +19,8 @@ const Login = () => {
     if (userRole === 'admin') return '/dashboard-admin';
     return '/dashboard';
   };
-  const from = location.state?.from?.pathname || getDefaultRedirect(user?.role);
+  
+  // 'from' logic is now inside handleSubmit
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,8 +32,16 @@ const Login = () => {
     }
 
     try {
-      await login(email, password);
-      navigate(from, { replace: true });
+      // --- THIS IS THE UPDATED PART ---
+      // 1. Wait for the login function to return the user
+      const loggedInUser = await login(email, password);
+
+      // 2. Determine the correct path *after* login
+      const redirectPath = location.state?.from?.pathname || getDefaultRedirect(loggedInUser.role);
+
+      // 3. Navigate to the correct path
+      navigate(redirectPath, { replace: true });
+      // --- END OF UPDATE ---
     } catch (err) {
       setError(err.message || 'Failed to log in. Please check your credentials.');
     }

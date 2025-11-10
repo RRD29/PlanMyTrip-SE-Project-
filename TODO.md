@@ -1,36 +1,22 @@
-# TODO: Add Autocomplete Suggestions to ExplorePlaces Search Input
+# TODO: Update Profile Photo Upload UI in UserProfile.js
 
-## Steps to Complete:
-1. Add `fetchAutocompleteSuggestions` function in `client/src/utils/geoapify-utils.js` to call Geoapify Autocomplete API, limiting to cities and places.
-2. In `client/src/pages/dashboard-user/ExplorePlaces.js`:
-   - Import useCallback and useEffect for debouncing.
-   - Add state: `suggestions` (array), `showSuggestions` (boolean), `selectedIndex` (number).
-   - Implement debounced suggestion fetching on input change.
-   - Update input onChange to fetch suggestions and show dropdown.
-   - Add onKeyDown handler for keyboard navigation (up/down arrows, enter, escape).
-   - Render dropdown UI below input with suggestions list, click handlers.
-   - On selection: update searchQuery, close dropdown.
-   - Add onBlur to close dropdown with delay.
-3. Style dropdown with Tailwind for absolute positioning, hover effects.
-4. Test autocomplete functionality: typing, suggestions, selection, search trigger.
-5. Handle edge cases: no suggestions, API errors, mobile view.
+## Task Overview
+Modify the profile photo (avatar) upload section in `client/src/pages/dashboard-user/UserProfile.js` to conditionally display buttons based on whether a photo is uploaded. Hide the file input to prevent "no file chosen" text. Apply to both user (traveller) and guide profiles.
 
-## Progress:
-- [x] Step 1: Add fetchAutocompleteSuggestions in geoapify-utils.js
-- [x] Step 2: Update ExplorePlaces.js with state and handlers
-- [x] Step 3: Add dropdown UI in ExplorePlaces.js
-- [x] Step 4: Test and debug
-- [x] Step 5: Handle edge cases
-# TODO: Add Home Page Button to Dashboard
+## Steps
+- [ ] Update the avatar upload section in the form to use conditional rendering similar to FileUploadField.
+- [ ] If avatarPreview exists (photo uploaded):
+  - Display "Change file" button in green font color.
+  - Provide a "View" button/link to view the uploaded photo.
+- [ ] If no avatarPreview (no photo uploaded):
+  - Display "Choose file" button.
+- [ ] Hide the file input element (use sr-only or similar) to avoid showing "no file chosen".
+- [ ] Ensure the functionality works for both user and guide roles.
 
-## Steps to Complete
-- [x] Add HomeIcon to client/src/assets/icons/index.js
-- [x] Update DashboardLayout.js to include Home link in UserNav, GuideNav, and AdminNav
-- [ ] Test the changes to ensure Home button appears in dashboard sidebar for all roles
-# TODO: Fix Forgot Password Functionality
+## Dependent Files
+- `client/src/pages/dashboard-user/UserProfile.js` (main file to edit)
 
-## Tasks
-- [x] Implement forgotPassword controller in auth.controller.js
-- [x] Implement resetPassword controller in auth.controller.js
-- [x] Test the forgot password flow
-- [ ] Test the reset password flow
+## Followup Steps
+- [ ] Test the UI changes in the browser to ensure buttons display correctly and file input is hidden.
+- [ ] Verify that uploading and changing photos works as expected.
+- [ ] Check for any styling issues or responsiveness.

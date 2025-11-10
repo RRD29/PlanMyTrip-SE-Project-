@@ -507,13 +507,44 @@ const UserProfile = () => {
 
         {/* --- SECTION 1: BASIC INFO & AVATAR --- */}
         <h2 className="text-xl font-semibold border-b pb-2">Basic Information & Photo</h2>
-        
+
         <div className="flex items-center space-x-4">
           <img src={avatarPreview || "https://via.placeholder.com/150"} alt="Avatar" className="w-24 h-24 rounded-full object-cover border-2"/>
           <div>
-            <label htmlFor="avatar-upload" className="block text-sm font-medium text-gray-700">Change Profile Photo</label>
-            <input id="avatar-upload" name="avatar" type="file" accept="image/*" onChange={handleFileChange} className="mt-1 text-sm"/>
-            {avatarFile && <p className="text-xs text-blue-500 mt-1">New: {avatarFile.name} (Ready to upload)</p>}
+            <label htmlFor="avatar-upload" className="block text-sm font-medium text-gray-700">Profile Photo</label>
+            {/* Hidden file input */}
+            <input id="avatar-upload" name="avatar" type="file" accept="image/*" onChange={handleFileChange} className="sr-only"/>
+            {/* Conditional buttons */}
+            {avatarPreview ? (
+              <div className="mt-1 flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('avatar-upload').click()}
+                  className="text-sm font-medium text-green-600 hover:text-green-800"
+                >
+                  Change file
+                </button>
+                <a
+                  href={avatarPreview}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                >
+                  View
+                </a>
+              </div>
+            ) : (
+              <div className="mt-1">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('avatar-upload').click()}
+                  className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                >
+                  Choose file
+                </button>
+              </div>
+            )}
+            {avatarFile && <p className="text-xs text-blue-600 mt-1">New: {avatarFile.name} (Ready to upload)</p>}
           </div>
         </div>
         

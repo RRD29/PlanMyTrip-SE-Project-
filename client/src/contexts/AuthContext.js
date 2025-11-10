@@ -54,7 +54,9 @@ export const AuthProvider = ({ children }) => {
       // 3. Update state
       setUserState(user);
 
-      return response;
+      // --- THIS IS THE UPDATED PART ---
+      return user; // Return the user object for role-based redirect
+      // --- END OF UPDATE ---
     } catch (error) {
       console.error("Login failed:", error);
       throw error.response.data || error; // Throw error to be caught by the login form

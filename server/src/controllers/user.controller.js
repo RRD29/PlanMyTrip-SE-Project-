@@ -39,18 +39,21 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
     // 3. Handle Traveller Profile (if user) --- NOW USES DOT NOTATION ---
     if (req.user.role === 'user') {
         if (phoneNumber !== undefined) updateData['travellerProfile.phoneNumber'] = phoneNumber;
-        if (gender !== undefined) updateData['travellerProfile.gender'] = gender;
-        if (dateOfBirth !== undefined) updateData['travellerProfile.dateOfBirth'] = dateOfBirth ? new Date(dateOfBirth) : null;
+        if (gender !== undefined && gender !== '') updateData['travellerProfile.gender'] = gender;
+        if (dateOfBirth !== undefined && dateOfBirth !== '') {
+            const date = new Date(dateOfBirth);
+            if (!isNaN(date.getTime())) updateData['travellerProfile.dateOfBirth'] = date;
+        }
         if (address !== undefined) {
              // Handle address object fields individually
-            if(address.city) updateData['travellerProfile.address.city'] = address.city;
-            if(address.state) updateData['travellerProfile.address.state'] = address.state;
-            if(address.country) updateData['travellerProfile.address.country'] = address.country;
-            if(address.pincode) updateData['travellerProfile.address.pincode'] = address.pincode;
+            if(address.city && address.city !== '') updateData['travellerProfile.address.city'] = address.city;
+            if(address.state && address.state !== '') updateData['travellerProfile.address.state'] = address.state;
+            if(address.country && address.country !== '') updateData['travellerProfile.address.country'] = address.country;
+            if(address.pincode && address.pincode !== '') updateData['travellerProfile.address.pincode'] = address.pincode;
         }
         if (preferredTravelStyle !== undefined) updateData['travellerProfile.preferredTravelStyle'] = Array.isArray(preferredTravelStyle) ? preferredTravelStyle : preferredTravelStyle.split(',').map(s => s.trim()).filter(Boolean);
         if (preferredLanguages !== undefined) updateData['travellerProfile.preferredLanguages'] = Array.isArray(preferredLanguages) ? preferredLanguages : preferredLanguages.split(',').map(s => s.trim()).filter(Boolean);
-        if (foodPreference !== undefined) updateData['travellerProfile.foodPreference'] = foodPreference;
+        if (foodPreference !== undefined && foodPreference !== '') updateData['travellerProfile.foodPreference'] = foodPreference;
         if (profileBio !== undefined) updateData['travellerProfile.profileBio'] = profileBio;
     }
 

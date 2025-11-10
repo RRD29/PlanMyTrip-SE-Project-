@@ -37,7 +37,10 @@ export const upload = multer({
 
 // Specific upload configurations
 export const uploadAvatar = upload.single('avatar');
+
+// --- THIS IS THE UPDATED PART ---
 export const uploadIdentityDocs = upload.fields([
+  { name: 'avatar', maxCount: 1 }, // <-- ADDED THIS LINE
   { name: 'aadhaarCard', maxCount: 1 },
   { name: 'panCard', maxCount: 1 },
   { name: 'passport', maxCount: 1 },
@@ -47,3 +50,4 @@ export const uploadIdentityDocs = upload.fields([
   { name: 'policeVerification', maxCount: 1 },
   { name: 'governmentIdProof', maxCount: 1 }
 ]);
+// --- END OF UPDATE ---
