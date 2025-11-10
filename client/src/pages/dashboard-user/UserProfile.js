@@ -62,7 +62,7 @@ const TravellerFields = (props) => (
 const GuidePublicFields = (props) => (
     <>
         <h2 className="text-xl font-semibold border-t pt-4 mt-4">Public Guide Information</h2>
-        
+
         <div className="grid grid-cols-2 gap-4">
             <div><label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth *</label><input type="date" id="dob" value={props.dob} onChange={(e) => props.setDob(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
             <div><label htmlFor="gender" className="block text-sm font-medium text-gray-700">Gender *</label><select id="gender" value={props.gender} onChange={(e) => props.setGender(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}><option value="">Select...</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
@@ -71,7 +71,7 @@ const GuidePublicFields = (props) => (
         <div>
             <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">Contact Number *</label>
             <div className="flex space-x-2">
-              <input type="tel" id="contactNumber" value={props.contactNumber} onChange={(e) => props.setContactNumber(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/>
+              <input type="tel" id="contactNumber" value={props.contactNumber} onChange={props.handleContactNumberChange} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/>
               {!props.otpVerified && (
                 <Button onClick={props.handleSendOTP} type="button" size="sm" disabled={!props.contactNumber}>
                   {props.otpSent ? 'Resend OTP' : 'Send OTP'}
@@ -79,6 +79,7 @@ const GuidePublicFields = (props) => (
               )}
               {props.otpVerified && <span className="text-green-600 mt-2">✓ Verified</span>}
             </div>
+            {props.validationErrors.contactNumber && <p className="text-red-500 text-sm mt-1">{props.validationErrors.contactNumber}</p>}
             {props.otpSent && !props.otpVerified && (
               <div className="mt-2 flex space-x-2">
                 <input type="text" placeholder="Enter OTP" value={props.otp} onChange={(e) => props.setOtp(e.target.value)} className={`flex-1 ${inputStyle}`}/>
@@ -86,9 +87,9 @@ const GuidePublicFields = (props) => (
               </div>
             )}
         </div>
-        
+
         <h3 className="text-lg font-medium border-t pt-4">Professional Details</h3>
-        
+
         <div className="grid grid-cols-2 gap-4">
             <div><label htmlFor="baseLocation" className="block text-sm font-medium text-gray-700">Base Location *</label><input type="text" id="baseLocation" value={props.baseLocation} onChange={(e) => props.setBaseLocation(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
             <div><label htmlFor="yearsExperience" className="block text-sm font-medium text-gray-700">Years of Experience *</label><input type="number" id="yearsExperience" value={props.yearsExperience} onChange={(e) => props.setYearsExperience(e.target.value)} className={`mt-1 block w-full ${inputStyle}`} required={!props.isProfileComplete}/></div>
@@ -111,9 +112,20 @@ const GuidePrivateFields = (props) => (
         <h3 className="text-lg font-medium">Verification Documents (Required)</h3>
 
         <div className="grid grid-cols-2 gap-4">
-          <div><label htmlFor="aadhaarNumber" className="block text-sm font-medium text-gray-700">Aadhaar Number *</label><input type="text" id="aadhaarNumber" value={props.aadhaarNumber} onChange={(e) => props.setAadhaarNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
-          <div><label htmlFor="panNumber" className="block text-sm font-medium text-gray-700">PAN Number *</label><input type="text" id="panNumber" value={props.panNumber} onChange={(e) => props.setPanNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
-          <div><label htmlFor="tourismLicenseNumber" className="block text-sm font-medium text-gray-700">Tourism License No. (Optional)</label><input type="text" id="tourismLicenseNumber" value={props.tourismLicenseNumber} onChange={(e) => props.setTourismLicenseNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`}/></div>
+          <div>
+            <label htmlFor="aadhaarNumber" className="block text-sm font-medium text-gray-700">Aadhaar Number *</label>
+            <input type="text" id="aadhaarNumber" value={props.aadhaarNumber} onChange={props.handleAadhaarNumberChange} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/>
+            {props.validationErrors.aadhaarNumber && <p className="text-red-500 text-sm mt-1">{props.validationErrors.aadhaarNumber}</p>}
+          </div>
+          <div>
+            <label htmlFor="panNumber" className="block text-sm font-medium text-gray-700">PAN Number *</label>
+            <input type="text" id="panNumber" value={props.panNumber} onChange={props.handlePanNumberChange} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/>
+            {props.validationErrors.panNumber && <p className="text-red-500 text-sm mt-1">{props.validationErrors.panNumber}</p>}
+          </div>
+          <div>
+            <label htmlFor="tourismLicenseNumber" className="block text-sm font-medium text-gray-700">Tourism License No. (Optional)</label>
+            <input type="text" id="tourismLicenseNumber" value={props.tourismLicenseNumber} onChange={(e) => props.setTourismLicenseNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`}/>
+          </div>
           <div><label htmlFor="policeVerificationNumber" className="block text-sm font-medium text-gray-700">Police Verification No. *</label><input type="text" id="policeVerificationNumber" value={props.policeVerificationNumber} onChange={(e) => props.setPoliceVerificationNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
         </div>
 
@@ -232,6 +244,84 @@ const UserProfile = () => {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
+
+  // Validation errors
+  const [validationErrors, setValidationErrors] = useState({});
+
+  // Validation functions
+  const validateContactNumber = (value) => {
+    const regex = /^\d{10}$/;
+    return regex.test(value) ? '' : 'Contact number must be exactly 10 digits.';
+  };
+
+  const validateAadhaarNumber = (value) => {
+    const regex = /^\d{12}$/;
+    return regex.test(value) ? '' : 'Aadhaar number must be exactly 12 digits.';
+  };
+
+  const validatePanNumber = (value) => {
+    const regex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    return regex.test(value) ? '' : 'PAN number must be in the format AAAAA9999A.';
+  };
+
+  const validateBankIFSC = (value) => {
+    const regex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+    return regex.test(value) ? '' : 'IFSC code must be 11 characters in the format XXXX0YYYYYY.';
+  };
+
+  const validateBankAccountNumber = (value) => {
+    const regex = /^\d+$/;
+    return regex.test(value) ? '' : 'Bank account number must contain only digits.';
+  };
+
+  const validateTourismLicenseNumber = (value) => {
+    if (!value) return ''; // Optional field
+    const regex = /^[A-Z0-9]{5,}$/;
+    return regex.test(value) ? '' : 'Tourism license number must be at least 5 alphanumeric characters.';
+  };
+
+  // Handle input changes with validation
+  const handleContactNumberChange = (e) => {
+    const value = e.target.value;
+    setContactNumber(value);
+    const error = validateContactNumber(value);
+    setValidationErrors(prev => ({ ...prev, contactNumber: error }));
+  };
+
+  const handleAadhaarNumberChange = (e) => {
+    const value = e.target.value;
+    setAadhaarNumber(value);
+    const error = validateAadhaarNumber(value);
+    setValidationErrors(prev => ({ ...prev, aadhaarNumber: error }));
+  };
+
+  const handlePanNumberChange = (e) => {
+    const value = e.target.value.toUpperCase();
+    setPanNumber(value);
+    const error = validatePanNumber(value);
+    setValidationErrors(prev => ({ ...prev, panNumber: error }));
+  };
+
+  const handleBankIFSCChange = (e) => {
+    const value = e.target.value.toUpperCase();
+    setBankIFSC(value);
+    const error = validateBankIFSC(value);
+    setValidationErrors(prev => ({ ...prev, bankIFSC: error }));
+  };
+
+  const handleBankAccountNumberChange = (e) => {
+    const value = e.target.value;
+    setBankAccountNumber(value);
+    const error = validateBankAccountNumber(value);
+    setValidationErrors(prev => ({ ...prev, bankAccountNumber: error }));
+  };
+
+  const handleTourismLicenseNumberChange = (e) => {
+    const value = e.target.value.toUpperCase();
+    setTourismLicenseNumber(value);
+    const error = validateTourismLicenseNumber(value);
+    setValidationErrors(prev => ({ ...prev, tourismLicenseNumber: error }));
+  };
 
   // --- FILE STATES ---
   const [avatarFile, setAvatarFile] = useState(null);
@@ -583,6 +673,7 @@ const UserProfile = () => {
             dob={dob} setDob={setDob}
             gender={gender} setGender={setGender}
             contactNumber={contactNumber} setContactNumber={setContactNumber}
+            handleContactNumberChange={handleContactNumberChange}
             baseLocation={baseLocation} setBaseLocation={setBaseLocation}
             yearsExperience={yearsExperience} setYearsExperience={setYearsExperience}
             languages={languages} setLanguages={setLanguages}
@@ -595,6 +686,7 @@ const UserProfile = () => {
             otp={otp} setOtp={setOtp} handleVerifyOTP={handleVerifyOTP}
             isProfileComplete={isProfileComplete}
             inputStyle={inputStyle}
+            validationErrors={validationErrors}
           />
         )}
 

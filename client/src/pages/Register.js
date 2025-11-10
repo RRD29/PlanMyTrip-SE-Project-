@@ -11,10 +11,31 @@ const Register = () => {
   const [role, setRole] = useState('user'); // Default role
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState({
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+  });
   
   // Get both register and login functions from AuthContext
-  const { register, login, loading: authLoading } = useAuth(); 
+  const { register, login, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  const validatePasswordStrength = (pwd) => {
+    setPasswordStrength({
+      hasUppercase: /[A-Z]/.test(pwd),
+      hasLowercase: /[a-z]/.test(pwd),
+      hasNumber: /\d/.test(pwd),
+      hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd),
+    });
+  };
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    validatePasswordStrength(newPassword);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,9 +137,31 @@ const Register = () => {
               autoComplete="new-password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
+            {/* Password Strength Suggestions */}
+            <div className="mt-2 text-sm">
+              <p className="text-gray-600 mb-1">Password must include:</p>
+              <ul className="space-y-1">
+                <li className={`flex items-center ${passwordStrength.hasUppercase ? 'text-green-600' : 'text-gray-500'}`}>
+                  <span className="mr-2">{passwordStrength.hasUppercase ? '✓' : '○'}</span>
+                  At least one uppercase letter (A-Z)
+                </li>
+                <li className={`flex items-center ${passwordStrength.hasLowercase ? 'text-green-600' : 'text-gray-500'}`}>
+                  <span className="mr-2">{passwordStrength.hasLowercase ? '✓' : '○'}</span>
+                  At least one lowercase letter (a-z)
+                </li>
+                <li className={`flex items-center ${passwordStrength.hasNumber ? 'text-green-600' : 'text-gray-500'}`}>
+                  <span className="mr-2">{passwordStrength.hasNumber ? '✓' : '○'}</span>
+                  At least one number (0-9)
+                </li>
+                <li className={`flex items-center ${passwordStrength.hasSpecialChar ? 'text-green-600' : 'text-gray-500'}`}>
+                  <span className="mr-2">{passwordStrength.hasSpecialChar ? '✓' : '○'}</span>
+                  At least one special character (!@#$%^&*)
+                </li>
+              </ul>
+            </div>
           </div>
           
           {/* Role Selector */}
