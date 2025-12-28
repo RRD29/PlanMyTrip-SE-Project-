@@ -16,7 +16,7 @@
 
 ## Core Features
 
-### User & Guide Management
+### 1.User & Guide Management
 - Role-based registration (Traveler / Guide / Admin)
 - Secure guide verification (Aadhaar, PAN, Tourism License, Police Verification)
 - Phone OTP verification using Twilio
@@ -26,7 +26,7 @@
 
 ---
 
-### Advanced Itinerary Planner
+### 2.Advanced Itinerary Planner
 - City, date-range & radius-based search
 - Tourist place discovery using Geoapify
 - Live weather integration
@@ -37,19 +37,19 @@
 
 ---
 
-### Make a Trip (Multi-City Planner)
+### 3.Make a Trip (Multi-City Planner)
 - Add multiple locations to create a custom route
 - Visual route rendering on maps
 - Shortest path calculation using current GPS location
 
 ---
 
-### Explore Nearby Places
+### 4.Explore Nearby Places
 - Discover restaurants, parks, malls & cafes near any location
 
 ---
 
-### Booking, Chat & Payments
+### 5.Booking, Chat & Payments
 - Real-time user–guide chat with Socket.io
 - Secure Stripe escrow payment system
 - OTP-based meetup confirmation
@@ -59,14 +59,14 @@
 
 ## Tech Stack
 
-### Frontend
+### 1.Frontend
 - React.js  
 - Tailwind CSS  
 - React Router  
 - Axios  
 - Socket.io-client  
 
-### Backend
+### 2.Backend
 - Node.js  
 - Express.js  
 - MongoDB & Mongoose  
@@ -74,13 +74,14 @@
 - Socket.io  
 - Multer & Nodemailer  
 
-### APIs & Services
+### 3.APIs & Services
 - Geoapify (Maps & routes)
 - Wikipedia API (Place details)
 - Stripe API (Payments)
 - Twilio API (Phone OTP)
 - Weather API
 - Cloudinary (Uploads)
+- Email API (For password reset emails)
 
 ---
 
@@ -99,14 +100,14 @@ Optional:
 
 ## How to Run the Project
 
-### Backend
+### 1.Backend
 ```bash
 cd server
 npm install
 npm run dev
 ```
 
-### Frontend
+### 1.Frontend
 ```bash
 cd client
 npm install
@@ -122,13 +123,13 @@ http://localhost:8001
 
 ## Testing Roles
 
-### Traveler
+### 1.Traveler
 - Sign up → Create itineraries → Book guides
 
-### Guide
+### 2.Guide
 - Sign up → Upload documents → Get approved → Accept bookings
 
-### Admin
+### 3.Admin
 - Change role to `admin` in MongoDB
 - Manage users, guides & payments
 
