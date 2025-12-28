@@ -1,37 +1,26 @@
 
-# 🌍 PLAN MY TRIP  
+# PLAN MY TRIP  
 ### Smart Travel Planning & Guide Booking Platform
 
 > A full-stack MERN application that connects travelers with **verified local guides** and helps users create **smart, data-driven itineraries** using real-world APIs.
 
 ---
 
-## ✨ Highlights
-- Advanced itinerary planning with maps, weather & Wikipedia data  
-- Verified local guide marketplace  
-- Real-time chat & secure escrow payments  
-- Multi-city route planning with shortest path logic  
+## Problem Statement
+Travel planning today faces several critical challenges:
+- Difficulty in creating efficient and well-structured travel itineraries
+- Lack of reliable and verified local guides for travelers
+- Fragmented use of multiple platforms for planning, booking, and communication
+- Limited real-time information about weather, places, and routes
+- Poor coordination and communication between travelers and local guides
+- Manual and time-consuming trip customization processes
+These challenges result in inefficient trip planning, increased traveler uncertainty, safety concerns, and a poor overall travel experience.
 
 ---
 
-## 👥 Team Members
+## Core Features
 
-| Name | Roll No |
-|-----|--------|
-| Rushikesh Dusane | IIT2024147 |
-| Arun Metre | IIT2024157 |
-| Shivam Mall | IIT2024124 |
-| Anurag Arbane | IIT2024156 |
-| Jayant Eslavath | IIT2024155 |
-
-🔗 **GitHub Repository**  
-https://github.com/RRD29/PlanMyTrip-SE-Project-.git
-
----
-
-## 🚀 Core Features
-
-### 👤 User & Guide Management
+### 1.User & Guide Management
 - Role-based registration (Traveler / Guide / Admin)
 - Secure guide verification (Aadhaar, PAN, Tourism License, Police Verification)
 - Phone OTP verification using Twilio
@@ -39,9 +28,7 @@ https://github.com/RRD29/PlanMyTrip-SE-Project-.git
 - Cloudinary-based image & document uploads
 - Secure forgot-password via email
 
----
-
-### 🗺️ Advanced Itinerary Planner
+### 2.Advanced Itinerary Planner
 - City, date-range & radius-based search
 - Tourist place discovery using Geoapify
 - Live weather integration
@@ -50,21 +37,15 @@ https://github.com/RRD29/PlanMyTrip-SE-Project-.git
 - Download itinerary as `.txt`
 - Smart guide matching by destination
 
----
-
-### 🧭 Make a Trip (Multi-City Planner)
+### 3.Make a Trip (Multi-City Planner)
 - Add multiple locations to create a custom route
 - Visual route rendering on maps
 - Shortest path calculation using current GPS location
 
----
-
-### 🔍 Explore Nearby Places
+### 4.Explore Nearby Places
 - Discover restaurants, parks, malls & cafes near any location
 
----
-
-### 💬 Booking, Chat & Payments
+### 5.Booking, Chat & Payments
 - Real-time user–guide chat with Socket.io
 - Secure Stripe escrow payment system
 - OTP-based meetup confirmation
@@ -72,16 +53,16 @@ https://github.com/RRD29/PlanMyTrip-SE-Project-.git
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
-### Frontend
+### 1.Frontend
 - React.js  
 - Tailwind CSS  
 - React Router  
 - Axios  
 - Socket.io-client  
 
-### Backend
+### 2.Backend
 - Node.js  
 - Express.js  
 - MongoDB & Mongoose  
@@ -89,17 +70,18 @@ https://github.com/RRD29/PlanMyTrip-SE-Project-.git
 - Socket.io  
 - Multer & Nodemailer  
 
-### APIs & Services
+### 3.APIs & Services
 - Geoapify (Maps & routes)
 - Wikipedia API (Place details)
 - Stripe API (Payments)
 - Twilio API (Phone OTP)
 - Weather API
 - Cloudinary (Uploads)
+- Email API (For password reset emails)
 
 ---
 
-## ⚙️ Prerequisites
+## Prerequisites
 - Node.js (v18+ recommended)
 - npm or yarn
 - Visual Studio Code
@@ -112,16 +94,16 @@ Optional:
 
 ---
 
-## ▶️ How to Run the Project
+## How to Run the Project
 
-### Backend
+### 1.Backend
 ```bash
 cd server
 npm install
 npm run dev
 ```
 
-### Frontend
+### 1.Frontend
 ```bash
 cd client
 npm install
@@ -135,32 +117,24 @@ http://localhost:8001
 
 ---
 
-## 🧪 Testing Roles
+## Testing Roles
 
-### Traveler
+### 1.Traveler
 - Sign up → Create itineraries → Book guides
 
-### Guide
+### 2.Guide
 - Sign up → Upload documents → Get approved → Accept bookings
 
-### Admin
+### 3.Admin
 - Change role to `admin` in MongoDB
 - Manage users, guides & payments
 
 ---
 
-## 🔮 Future Scope
+## Future Scope
 - ML-based personalized travel recommendations
 - AI-generated smart itineraries
 - Intelligent guide & destination suggestions
+- Premimum guide options (Application , selection , booking)
 
 ---
-
-## 📞 Contact
-- **GitHub:** https://github.com/RRD29/PlanMyTrip-SE-Project-.git  
-- **Email:** rushird2974@gmail.com  
-- **Phone:** 9284907504  
-
----
-
-⭐ If you like this project, give it a star!
