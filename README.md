@@ -28,8 +28,6 @@ These challenges result in inefficient trip planning, increased traveler uncerta
 - Cloudinary-based image & document uploads
 - Secure forgot-password via email
 
----
-
 ### 2.Advanced Itinerary Planner
 - City, date-range & radius-based search
 - Tourist place discovery using Geoapify
@@ -39,19 +37,13 @@ These challenges result in inefficient trip planning, increased traveler uncerta
 - Download itinerary as `.txt`
 - Smart guide matching by destination
 
----
-
 ### 3.Make a Trip (Multi-City Planner)
 - Add multiple locations to create a custom route
 - Visual route rendering on maps
 - Shortest path calculation using current GPS location
 
----
-
 ### 4.Explore Nearby Places
 - Discover restaurants, parks, malls & cafes near any location
-
----
 
 ### 5.Booking, Chat & Payments
 - Real-time user–guide chat with Socket.io
