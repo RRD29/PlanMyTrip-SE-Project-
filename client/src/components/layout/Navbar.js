@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext'; // Assuming AuthContext is here
+import { useAuth } from '../../contexts/AuthContext'; 
 import Button from '../common/Button';
 
-// --- Icons for Mobile Menu ---
+
 const MenuIcon = (props) => (
   <svg
     {...props}
@@ -34,9 +34,9 @@ const CloseIcon = (props) => (
   </svg>
 );
 
-// --- Main Navbar Component ---
+
 const Navbar = () => {
-  const { user, logout } = useAuth(); // Get user state and logout function
+  const { user, logout } = useAuth(); 
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -45,12 +45,12 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  // Determine the correct dashboard path based on role
+  
   const dashboardPath = user
     ? (user.role === 'guide' ? '/dashboard-guide' : '/dashboard')
     : '/login';
 
-  // Helper for NavLink active styling
+  
   const navLinkClass = ({ isActive }) =>
     `px-3 py-2 rounded-md text-sm font-medium ${
       isActive
@@ -70,7 +70,7 @@ const Navbar = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
 
-          {/* --- Logo and Desktop Nav Links --- */}
+          {}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 text-white text-xl font-bold">
               PlanMyTrip ✈️
@@ -83,13 +83,13 @@ const Navbar = () => {
                 <NavLink to="/search-places" className={navLinkClass}>
                   Search Places
                 </NavLink>
-                {/* --- HIDE "Find Guides" for logged-in guides --- */}
+                {}
                 {(!user || user.role !== 'guide') && (
                   <NavLink to="/guides" className={navLinkClass}>
                     Find Guides
                   </NavLink>
                 )}
-                {/* --------------------------------------------- */}
+                {}
                 {user && (
                   <NavLink to={dashboardPath} className={navLinkClass}>
                     Dashboard
@@ -99,7 +99,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* --- Desktop Auth Buttons --- */}
+          {}
           <div className="hidden md:block">
             <div className="ml-4 flex items-center md:ml-6">
               {user ? (
@@ -130,7 +130,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* --- Mobile Menu Button --- */}
+          {}
           <div className="-mr-2 flex md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -150,7 +150,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* --- Mobile Menu Panel --- */}
+      {}
       {isMobileMenuOpen && (
         <div className="md:hidden" id="mobile-menu">
           <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
@@ -160,13 +160,13 @@ const Navbar = () => {
             <NavLink to="/search-places" className={mobileNavLinkClass}>
               Search Places
             </NavLink>
-            {/* --- HIDE "Find Guides" for logged-in guides --- */}
+            {}
             {(!user || user.role !== 'guide') && (
               <NavLink to="/guides" className={mobileNavLinkClass}>
                 Find Guides
               </NavLink>
             )}
-            {/* --------------------------------------------- */}
+            {}
             {user && (
               <NavLink to={dashboardPath} className={mobileNavLinkClass}>
                 Dashboard

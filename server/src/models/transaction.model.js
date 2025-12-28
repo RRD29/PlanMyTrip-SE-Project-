@@ -9,11 +9,11 @@ const transactionSchema = new Schema(
     },
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User', // The user who paid
+      ref: 'User', 
     },
     guide: {
       type: Schema.Types.ObjectId,
-      ref: 'User', // The guide who will be paid
+      ref: 'User', 
     },
     amount: {
       type: Number,
@@ -22,9 +22,9 @@ const transactionSchema = new Schema(
     type: {
       type: String,
       enum: [
-        'charge', // Money from user to admin (escrow)
-        'payout', // Money from admin to guide
-        'refund', // Money from admin back to user
+        'charge', 
+        'payout', 
+        'refund', 
       ],
       required: true,
     },
@@ -34,12 +34,12 @@ const transactionSchema = new Schema(
       default: 'pending',
     },
     stripeId: {
-      type: String, // The Stripe object ID (pi_, ch_, tr_, re_)
+      type: String, 
       required: true,
       index: true,
     },
     notes: {
-      type: String, // e.g., "Admin manual dispute resolution"
+      type: String, 
     }
   },
   { timestamps: true }

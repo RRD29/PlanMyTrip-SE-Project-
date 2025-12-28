@@ -1,9 +1,6 @@
 import React from 'react';
 
-/**
- * A large spinner for loading a full page or a large component.
- * @param {string} [props.text='Loading...'] - Optional text to display below spinner
- */
+
 export const PageLoader = ({ text = 'Loading...' }) => (
   <div className="flex flex-col items-center justify-center p-12">
     <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -11,10 +8,7 @@ export const PageLoader = ({ text = 'Loading...' }) => (
   </div>
 );
 
-/**
- * A small, inline spinner.
- * @param {'sm' | 'md' | 'lg'} [props.size='md'] - Size of the spinner
- */
+
 export const Spinner = ({ size = 'md' }) => {
   const sizeStyles = {
     sm: 'w-4 h-4',
@@ -32,10 +26,7 @@ export const Spinner = ({ size = 'md' }) => {
   );
 };
 
-/**
- * A "skeleton" loader for text content.
- * @param {string} [props.className=''] - Additional class names
- */
+
 export const SkeletonText = ({ className = '' }) => (
   <div
     className={`w-full h-4 bg-gray-200 rounded-full animate-pulse ${className}`}

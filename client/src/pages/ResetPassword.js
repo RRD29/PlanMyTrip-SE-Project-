@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '../components/common/Button';
-import { authService } from '../services/auth.service.js'; // Import the service
-import { useAuth } from '../contexts/AuthContext'; // To potentially log user in
+import { authService } from '../services/auth.service.js'; 
+import { useAuth } from '../contexts/AuthContext'; 
 import authImage from '../assets/images/auth-background.jpg';
 
 const ResetPassword = () => {
-  const { token } = useParams(); // Get token from URL /reset-password/:token
+  const { token } = useParams(); 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -41,7 +41,7 @@ const ResetPassword = () => {
       localStorage.setItem('token', accessToken);
 
       setTimeout(() => {
-         window.location.href = '/dashboard'; // Force reload to update auth state
+         window.location.href = '/dashboard'; 
       }, 2000);
 
     } catch (err) {
@@ -67,7 +67,7 @@ const ResetPassword = () => {
           {error && <p className="text-red-600 bg-red-100 p-3 rounded-md text-center">{error}</p>}
           {message && <p className="text-green-600 bg-green-100 p-3 rounded-md text-center">{message}</p>}
 
-          {!message && ( // Hide form after success
+          {!message && ( 
             <>
               <div>
                 <label

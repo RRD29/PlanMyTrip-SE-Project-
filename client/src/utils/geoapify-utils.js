@@ -1,22 +1,17 @@
-// client/src/utils/geoapify-utils.js
+
 
 import axios from 'axios';
 
-// Get the Geoapify API key from environment variables
+
 const GEOAPIFY_API_KEY = process.env.REACT_APP_GEOAPIFY_API_KEY;
 
-/**
- * Converts a text address into geographic coordinates (latitude, longitude)
- * using the Geoapify Geocoding API.
- * @param {string} address The address to geocode.
- * @returns {Promise<object>} An object with { lat, lng } or throws an error.
- */
+
 export const geocodeAddress = async (address) => {
   if (!GEOAPIFY_API_KEY) {
     throw new Error("Geoapify API key is missing. Check your .env file.");
   }
 
-  // Geoapify Geocoding API endpoint
+  
   const url = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(address)}&apiKey=${GEOAPIFY_API_KEY}`;
 
   try {
@@ -24,45 +19,41 @@ export const geocodeAddress = async (address) => {
     const features = response.data.features;
 
     if (features && features.length > 0) {
-      // Use the first (most confident) result
+      
       const feature = features[0];
 
-      // Geoapify returns coordinates as [longitude, latitude]. We need to swap them.
+      
       const [lng, lat] = feature.geometry.coordinates;
 
       return {
           lat,
           lng,
-          fullAddress: feature.properties.formatted, // Use the formatted address
+          fullAddress: feature.properties.formatted, 
           confidence: feature.properties.confidence
       };
     }
 
-    // If no results are found
+    
     throw new Error('Address not found or no valid features returned.');
 
   } catch (error) {
     console.error('Geoapify Geocoding Error:', error.message || error);
-    // Re-throw a generic error for the calling function to handle
+    
     throw new Error(`Failed to geocode address: ${address}`);
   }
 };
 
-/**
- * Fetches the main railway station for a given city.
- * @param {string} city The city name.
- * @returns {Promise<object>} Railway station data { lat, lng, name }.
- */
+
 export const fetchRailwayStation = async (city) => {
   if (!GEOAPIFY_API_KEY) {
     throw new Error("Geoapify API key is missing. Check your .env file.");
   }
 
-  // First, geocode the city to get its coordinates
+  
   const cityData = await geocodeAddress(city);
   const { lat, lng } = cityData;
 
-  // Search for railway stations
+  
   const url = `https://api.geoapify.com/v2/places?categories=building.transportation.train_station&filter=circle:${lng},${lat},20000&limit=5&apiKey=${GEOAPIFY_API_KEY}`;
 
   try {
@@ -70,7 +61,7 @@ export const fetchRailwayStation = async (city) => {
     const features = response.data.features;
 
     if (features && features.length > 0) {
-      // Assume the first one is the main station
+      
       const station = features[0];
       const [lng, lat] = station.geometry.coordinates;
       return {
@@ -80,35 +71,29 @@ export const fetchRailwayStation = async (city) => {
       };
     }
 
-    // Fallback to city center if no station found
+    
     return { lat: cityData.lat, lng: cityData.lng, name: 'City Center' };
   } catch (error) {
     console.error('Geoapify Railway Station Error:', error.message);
-    // Fallback to city center
+    
     return { lat: cityData.lat, lng: cityData.lng, name: 'City Center' };
   }
 };
 
-/**
- * Fetches famous places (POIs) for a given city using Geoapify Places API, centered on railway station within radius.
- * @param {string} city The city name to search for places.
- * @param {number} limit Number of places to fetch (default 10).
- * @param {number} radius Radius in km (default 10).
- * @returns {Promise<Array>} Array of place objects with { name, lat, lng, category, address, openingHours }.
- */
+
 export const fetchFamousPlaces = async (city, limit = 10, radius = 10) => {
   if (!GEOAPIFY_API_KEY) {
     throw new Error("Geoapify API key is missing. Check your .env file.");
   }
 
-  // First, find the main railway station
+  
   const station = await fetchRailwayStation(city);
   const { lat, lng } = station;
 
-  // Convert radius to meters
+  
   const radiusMeters = radius * 1000;
 
-  // Geoapify Places API endpoint for POIs, sorted by popularity
+  
   const url = `https://api.geoapify.com/v2/places?categories=tourism.sights,entertainment,leisure,religion,building.historic&filter=circle:${lng},${lat},${radiusMeters}&limit=20&sort=popularity&apiKey=${GEOAPIFY_API_KEY}`;
 
   try {
@@ -126,39 +111,39 @@ export const fetchFamousPlaces = async (city, limit = 10, radius = 10) => {
         const categories = feature.properties.categories || [];
         const rawData = feature.properties.datasource?.raw || {};
 
-        // Assign priority based on categories
-        let priority = 10; // Default low priority
+        
+        let priority = 10; 
         if (rawData['ref:whc'] || rawData['heritage:operator'] === 'whc') {
-          priority = 1; // UNESCO sites
+          priority = 1; 
         } else if (categories.includes('building.historic') || categories.includes('tourism.sights.memorial')) {
-          priority = 2; // Historical monuments
+          priority = 2; 
         } else if (categories.includes('tourism.sights.castle') || categories.includes('tourism.sights.fort')) {
-          priority = 3; // Forts
+          priority = 3; 
         } else if (categories.includes('religion.place_of_worship.hinduism') && (rawData.historic || categories.includes('building.historic'))) {
-          priority = 4; // Ancient temples
+          priority = 4; 
         } else if (categories.includes('religion.place_of_worship.hinduism')) {
-          priority = 5; // Famous temples
+          priority = 5; 
         } else if (categories.includes('leisure.park') || categories.includes('commercial.marketplace')) {
-          priority = 6; // Famous and big parks and markets
+          priority = 6; 
         } else if (categories.includes('entertainment.museum')) {
-          priority = 7; // Museums
+          priority = 7; 
         } else if (categories.includes('commercial.shopping_mall')) {
-          priority = 8; // Malls
+          priority = 8; 
         }
 
-        // Limit museums to 1-2
+        
         if (categories.includes('entertainment.museum')) {
-          if (museumCount >= 2) continue; // Skip if already have 2 museums
+          if (museumCount >= 2) continue; 
           museumCount++;
         }
 
-        // Limit parks to max 3
+        
         if (categories.includes('leisure.park')) {
-          if (parkCount >= 3) continue; // Skip if already have 3 parks
+          if (parkCount >= 3) continue; 
           parkCount++;
         }
 
-        // Fetch details including opening hours and images
+        
         let openingHours = 'Not available';
         let imageUrl = null;
         if (placeId) {
@@ -169,7 +154,7 @@ export const fetchFamousPlaces = async (city, limit = 10, radius = 10) => {
             if (datasource && datasource.raw && datasource.raw.opening_hours) {
               openingHours = datasource.raw.opening_hours;
             }
-            // Extract image URL if available
+            
             if (datasource && datasource.raw && datasource.raw.image) {
               imageUrl = datasource.raw.image;
             }
@@ -191,7 +176,7 @@ export const fetchFamousPlaces = async (city, limit = 10, radius = 10) => {
         });
       }
 
-      // Sort places by priority (ascending), then by name
+      
       places.sort((a, b) => {
         if (a.priority !== b.priority) return a.priority - b.priority;
         return a.name.localeCompare(b.name);
@@ -200,7 +185,7 @@ export const fetchFamousPlaces = async (city, limit = 10, radius = 10) => {
       return places;
     }
 
-    return []; // No places found
+    return []; 
 
   } catch (error) {
     console.error('Geoapify Places Error:', error.message || error);
@@ -208,16 +193,9 @@ export const fetchFamousPlaces = async (city, limit = 10, radius = 10) => {
   }
 };
 
-/**
- * Calculates the distance between two points using Haversine formula.
- * @param {number} lat1 Latitude of first point.
- * @param {number} lng1 Longitude of first point.
- * @param {number} lat2 Latitude of second point.
- * @param {number} lng2 Longitude of second point.
- * @returns {number} Distance in kilometers.
- */
+
 export const calculateDistance = (lat1, lng1, lat2, lng2) => {
-  const R = 6371; // Radius of the Earth in km
+  const R = 6371; 
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLng = (lng2 - lng1) * Math.PI / 180;
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -228,11 +206,7 @@ export const calculateDistance = (lat1, lng1, lat2, lng2) => {
 };
 
 
-/**
- * Fetch road route between multiple waypoints using Geoapify Routing API.
- * @param {Array} waypoints array of {lat, lng}
- * @returns {Array} polyline coordinates
- */
+
 export const getRoadRoute = async (waypoints) => {
   const GEOAPIFY_API_KEY = process.env.REACT_APP_GEOAPIFY_API_KEY;
 
@@ -247,15 +221,7 @@ export const getRoadRoute = async (waypoints) => {
   return coords;
 };
 
-/**
- * Fetches nearby places using Geoapify Places API based on categories.
- * @param {number} lat Latitude of the center point.
- * @param {number} lng Longitude of the center point.
- * @param {Array<string>} categories Array of category strings (e.g., ['accommodation.hotel', 'catering.restaurant']).
- * @param {number} radius Radius in meters (default 5000).
- * @param {number} limit Number of places to fetch (default 20).
- * @returns {Promise<Array>} Array of place objects with basic info.
- */
+
 export const fetchNearbyPlaces = async (lat, lng, categories, radius = 5000, limit = 20) => {
   if (!GEOAPIFY_API_KEY) {
     throw new Error("Geoapify API key is missing. Check your .env file.");
@@ -287,11 +253,7 @@ export const fetchNearbyPlaces = async (lat, lng, categories, radius = 5000, lim
   }
 };
 
-/**
- * Fetches detailed information for a specific place using Geoapify Place Details API.
- * @param {string} placeId The place ID from the places search.
- * @returns {Promise<object>} Detailed place information including website, phone, photos, rating, etc.
- */
+
 export const fetchPlaceDetails = async (placeId) => {
   if (!GEOAPIFY_API_KEY) {
     throw new Error("Geoapify API key is missing. Check your .env file.");
@@ -319,7 +281,7 @@ export const fetchPlaceDetails = async (placeId) => {
         email: datasource.email || datasource.contact?.email || null,
         opening_hours: datasource.opening_hours || null,
         rating: datasource.rating || null,
-        photos: datasource.image ? [datasource.image] : [], // Geoapify may provide image URLs
+        photos: datasource.image ? [datasource.image] : [], 
         description: datasource.description || null,
         amenities: datasource.amenities || [],
         cuisine: datasource.cuisine || null,
@@ -334,12 +296,7 @@ export const fetchPlaceDetails = async (placeId) => {
   }
 };
 
-/**
- * Fetches autocomplete suggestions for cities and places using Geoapify Autocomplete API.
- * @param {string} text The text to autocomplete.
- * @param {number} limit Number of suggestions to fetch (default 5).
- * @returns {Promise<Array>} Array of suggestion objects with { text, lat, lng, type }.
- */
+
 export const fetchAutocompleteSuggestions = async (text, limit = 5) => {
   if (!GEOAPIFY_API_KEY) {
     throw new Error("Geoapify API key is missing. Check your .env file.");
@@ -349,7 +306,7 @@ export const fetchAutocompleteSuggestions = async (text, limit = 5) => {
     return [];
   }
 
-  // Geoapify Autocomplete API endpoint, limiting to cities and places
+  
   const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(text.trim())}&limit=${limit}&type=city,place&apiKey=${GEOAPIFY_API_KEY}`;
 
   try {

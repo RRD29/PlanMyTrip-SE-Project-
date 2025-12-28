@@ -6,9 +6,9 @@ import { sendOTP, verifyOtp } from '../services/otp.service.js';
 import fs from 'fs';
 import path from 'path';
 
-// --- Get Current User's Profile ---
+
 export const getMyProfile = asyncHandler(async (req, res) => {
-    // req.user is attached by the verifyJWT middleware
+    
     const user = await User.findById(req.user._id).select("-password -refreshToken +identityVerification +paymentDetails");
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -18,31 +18,31 @@ export const getMyProfile = asyncHandler(async (req, res) => {
     );
 });
 
-// --- THIS IS THE CONSOLIDATED UPDATE FUNCTION ---
+
 export const updateMyProfile = asyncHandler(async (req, res) => {
-    // 1. Get ALL text fields from req.body
+    
     const {
         fullName,
-        // Traveller fields
+        
         phoneNumber, gender, dateOfBirth, address, preferredTravelStyle, preferredLanguages, foodPreference, profileBio,
-        // Guide fields
+        
         bio, baseLocation, pricePerDay, dob, contactNumber, yearsExperience, languages, expertiseRegions, specialties, availabilitySchedule,
-        // Guide Private fields
+        
         aadhaarNumber, panNumber, passportNumber, drivingLicenseNumber, tourismLicenseNumber, trainingCertificateNumber, policeVerificationNumber,
         bankAccountName, bankAccountNumber, bankIFSC, upiId
     } = req.body;
 
-    // 2. Start building the update object
+    
     const updateData = {};
     if (fullName !== undefined) updateData.fullName = fullName;
 
-    // 3. Handle Traveller Profile (if user) --- NOW USES DOT NOTATION ---
+    
     if (req.user.role === 'user') {
         if (phoneNumber !== undefined) updateData['travellerProfile.phoneNumber'] = phoneNumber;
         if (gender !== undefined) updateData['travellerProfile.gender'] = gender;
         if (dateOfBirth !== undefined) updateData['travellerProfile.dateOfBirth'] = dateOfBirth ? new Date(dateOfBirth) : null;
         if (address !== undefined) {
-             // Handle address object fields individually
+             
             if(address.city) updateData['travellerProfile.address.city'] = address.city;
             if(address.state) updateData['travellerProfile.address.state'] = address.state;
             if(address.country) updateData['travellerProfile.address.country'] = address.country;
@@ -54,11 +54,11 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
         if (profileBio !== undefined) updateData['travellerProfile.profileBio'] = profileBio;
     }
 
-    // 4. Handle Guide Profile (if guide)
+    
     if (req.user.role === 'guide') {
-        // We use dot notation for ALL nested fields
         
-        // Public Profile
+        
+        
         if (bio !== undefined) updateData['guideProfile.bio'] = bio;
         if (baseLocation !== undefined) updateData['guideProfile.baseLocation'] = baseLocation;
         if (pricePerDay !== undefined) updateData['guideProfile.pricePerDay'] = Number(pricePerDay);
@@ -71,7 +71,7 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
         if (specialties !== undefined) updateData['guideProfile.specialties'] = Array.isArray(specialties) ? specialties : specialties.split(',').map(s => s.trim()).filter(Boolean);
         if (availabilitySchedule !== undefined) updateData['guideProfile.availabilitySchedule'] = availabilitySchedule;
         
-        // Private Identity
+        
         if (aadhaarNumber !== undefined) updateData['identityVerification.aadhaarNumber'] = aadhaarNumber;
         if (panNumber !== undefined) updateData['identityVerification.panNumber'] = panNumber;
         if (passportNumber !== undefined) updateData['identityVerification.passportNumber'] = passportNumber;
@@ -80,18 +80,18 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
         if (trainingCertificateNumber !== undefined) updateData['identityVerification.trainingCertificateNumber'] = trainingCertificateNumber;
         if (policeVerificationNumber !== undefined) updateData['identityVerification.policeVerificationNumber'] = policeVerificationNumber;
 
-        // Private Payment
+        
         if (bankAccountName !== undefined) updateData['paymentDetails.bankAccountName'] = bankAccountName;
         if (bankAccountNumber !== undefined) updateData['paymentDetails.bankAccountNumber'] = bankAccountNumber;
         if (bankIFSC !== undefined) updateData['paymentDetails.bankIFSC'] = bankIFSC;
         if (upiId !== undefined) updateData['paymentDetails.upiId'] = upiId;
     }
 
-    // 5. Handle File Uploads (if they exist)
+    
     if (req.files) {
         const getFilePath = (fieldName) => {
             if (req.files[fieldName] && req.files[fieldName][0]) {
-                // --- FIX: Create a full, absolute URL ---
+                
                 return `${req.protocol}://${req.get('host')}/uploads/${req.files[fieldName][0].filename}`;
             }
             return undefined;
@@ -104,7 +104,7 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
             if (req.user.role === 'user') updateData['travellerProfile.profilePhoto'] = avatarUrl;
         }
         
-        // Identity documents (Guide only)
+        
         if (req.user.role === 'guide') {
             const docFields = ['aadhaarCard', 'panCard', 'passport', 'drivingLicense', 'tourismLicense', 'trainingCertificate', 'policeVerification', 'governmentIdProof'];
             docFields.forEach(field => {
@@ -116,12 +116,12 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
         }
     }
 
-    // Check if all required fields are provided to set profile complete (Guide)
+    
     if (req.user.role === 'guide') {
         const userForCheck = await User.findById(req.user._id).select("guideProfile");
-        // Create a representation of the *next* state of the profile
+        
         const potentialProfile = { ...userForCheck.guideProfile.toObject() };
-        // Apply updates from updateData
+        
         Object.keys(updateData).forEach(key => {
             if (key.startsWith('guideProfile.')) {
                 potentialProfile[key.replace('guideProfile.', '')] = updateData[key];
@@ -194,7 +194,7 @@ export const verifyPhoneOTP = asyncHandler(async (req, res) => {
     if (req.user.role === 'guide') {
         phoneUpdate['guideProfile.contactNumber'] = phoneNumber;
         phoneUpdate['guideProfile.isContactVerified'] = true;
-    } else { // 'user'
+    } else { 
         phoneUpdate['travellerProfile.phoneNumber'] = phoneNumber;
         phoneUpdate['travellerProfile.isContactVerified'] = true;
     }
@@ -214,19 +214,6 @@ export const verifyPhoneOTP = asyncHandler(async (req, res) => {
     );
 });
 
-// --- THESE FUNCTIONS ARE NO LONGER CALLED BY ROUTES ---
-// The logic from them has been merged into updateMyProfile.
 
-/*
-export const uploadAvatar = asyncHandler(async (req, res) => {
-    // ... This logic is now inside updateMyProfile ...
-});
 
-export const uploadIdentityDoc = asyncHandler(async (req, res) => {
-    // ... This logic is now inside updateMyProfile ...
-});
 
-export const updateGuideProfile = asyncHandler(async (req, res) => {
-    // ... This logic is now inside updateMyProfile ...
-});
-*/

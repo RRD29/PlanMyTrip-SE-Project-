@@ -28,7 +28,7 @@ const ExplorePlaces = () => {
     'leisure.park'
   ];
 
-  // Debounced function to fetch suggestions
+  
   const fetchSuggestions = useCallback(async (query) => {
     if (!query.trim()) {
       setSuggestions([]);
@@ -47,7 +47,7 @@ const ExplorePlaces = () => {
     }
   }, []);
 
-  // Debounce effect for input changes
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchSuggestions(searchQuery);
@@ -139,11 +139,11 @@ const ExplorePlaces = () => {
   };
 
   const handleInputBlur = () => {
-    // Delay hiding to allow clicks on suggestions
+    
     setTimeout(() => setShowSuggestions(false), 150);
   };
 
-  // eslint-disable-next-line no-unused-vars
+  
   const handleInputFocus = () => {
     if (suggestions.length > 0) {
       setShowSuggestions(true);
@@ -189,7 +189,7 @@ const ExplorePlaces = () => {
     <div className="p-6">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Explore Places</h1>
 
-      {/* Search Form */}
+      {}
       <div className="mb-6 relative">
         <div className="flex space-x-4">
           <div className="flex-grow relative">
@@ -230,7 +230,7 @@ const ExplorePlaces = () => {
         {error && <p className="text-red-500 mt-2">{error}</p>}
       </div>
 
-      {/* Results */}
+      {}
       {Object.keys(places).length > 0 && (
         <div className="space-y-8">
           {Object.entries(places).map(([category, categoryPlaces]) => (
@@ -268,7 +268,7 @@ const ExplorePlaces = () => {
         <p className="text-gray-500 text-center">No places found. Try a different search term.</p>
       )}
 
-      {/* Place Details Modal */}
+      {}
       <Modal
         isOpen={isDetailsModalOpen}
         onClose={() => {
@@ -286,7 +286,7 @@ const ExplorePlaces = () => {
             </div>
           ) : placeDetails ? (
             <>
-              {/* Basic Info */}
+              {}
               <div>
                 <h3 className="text-xl font-semibold mb-2">{placeDetails.name}</h3>
                 <p className="text-gray-600 mb-2">{placeDetails.address}</p>
@@ -296,7 +296,7 @@ const ExplorePlaces = () => {
                 )}
               </div>
 
-              {/* Rating */}
+              {}
               {placeDetails.rating && (
                 <div>
                   <span className="font-medium">Rating: </span>
@@ -304,7 +304,7 @@ const ExplorePlaces = () => {
                 </div>
               )}
 
-              {/* Contact Info */}
+              {}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {placeDetails.website && (
                   <div>
@@ -337,7 +337,7 @@ const ExplorePlaces = () => {
                 )}
               </div>
 
-              {/* Opening Hours */}
+              {}
               {placeDetails.opening_hours && (
                 <div>
                   <span className="font-medium">Opening Hours: </span>
@@ -347,7 +347,7 @@ const ExplorePlaces = () => {
                 </div>
               )}
 
-              {/* Description */}
+              {}
               {placeDetails.description && (
                 <div>
                   <span className="font-medium">Description: </span>
@@ -355,7 +355,7 @@ const ExplorePlaces = () => {
                 </div>
               )}
 
-              {/* Cuisine */}
+              {}
               {placeDetails.cuisine && (
                 <div>
                   <span className="font-medium">Cuisine: </span>
@@ -363,7 +363,7 @@ const ExplorePlaces = () => {
                 </div>
               )}
 
-              {/* Price Range */}
+              {}
               {placeDetails.price_range && (
                 <div>
                   <span className="font-medium">Price Range: </span>
@@ -371,7 +371,7 @@ const ExplorePlaces = () => {
                 </div>
               )}
 
-              {/* Amenities */}
+              {}
               {placeDetails.amenities && placeDetails.amenities.length > 0 && (
                 <div>
                   <span className="font-medium">Amenities: </span>
@@ -385,7 +385,7 @@ const ExplorePlaces = () => {
                 </div>
               )}
 
-              {/* Photos */}
+              {}
               {placeDetails.photos && placeDetails.photos.length > 0 && (
                 <div>
                   <span className="font-medium">Photos: </span>
@@ -395,7 +395,7 @@ const ExplorePlaces = () => {
                         key={index}
                         src={photo}
                         alt={`${placeDetails.name} ${index + 1}`}
-                        // eslint-disable-next-line jsx-a11y/img-redundant-alt
+                        
                         className="w-full h-32 object-cover rounded"
                       />
                     ))}

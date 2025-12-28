@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
-import stripePromise from '../../lib/stripe'; // Your Stripe.js loader
-import { useBooking } from '../../contexts/BookingContext'; // Your booking context
+import stripePromise from '../../lib/stripe'; 
+import { useBooking } from '../../contexts/BookingContext'; 
 import Button from '../../components/common/Button';
 import { PageLoader } from '../../components/common/Loaders';
 import { useNavigate } from 'react-router-dom';
 
-// --- This is the actual payment form ---
-// We keep it in the same file to contain the logic
+
+
 const StripePaymentForm = ({ bookingId }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -21,21 +21,21 @@ const StripePaymentForm = ({ bookingId }) => {
     e.preventDefault();
 
     if (!stripe || !elements) {
-      // Stripe.js has not yet loaded.
+      
       return;
     }
 
     setIsProcessing(true);
 
-    // This is where Stripe confirms the payment with the clientSecret
+    
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        // We'll redirect to a "booking success" page,
-        // but for now, we'll redirect to the OTP page.
+        
+        
         return_url: `${window.location.origin}/booking/${bookingId}/verify`,
       },
-      // We set redirect to 'if_required' to handle success/error here
+      
       redirect: 'if_required', 
     });
 
@@ -43,9 +43,9 @@ const StripePaymentForm = ({ bookingId }) => {
       setMessage(error.message);
       setIsProcessing(false);
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-      // Payment succeeded!
-      // The backend webhook will handle the "Paid/Escrowed" status update.
-      // We can now send the user to the OTP page.
+      
+      
+      
       setMessage('Payment successful! Redirecting...');
       navigate(`/booking/${bookingId}/verify`);
     } else {
@@ -67,26 +67,26 @@ const StripePaymentForm = ({ bookingId }) => {
         {isProcessing ? 'Processing...' : 'Pay Now'}
       </Button>
       
-      {/* Show any error or success messages */}
+      {}
       {message && <div id="payment-message" className="text-red-500 text-center font-medium">{message}</div>}
     </form>
   );
 };
 
 
-// --- This is the main Page component ---
+
 const BookingPage = () => {
-  // In a real app, you'd get the booking details (ID, amount)
-  // from a URL param or context after the user creates the trip plan.
   
-  // --- MOCK DATA (Remove in real app) ---
+  
+  
+  
   const MOCK_BOOKING = {
     _id: 'booking_12345',
     guide: 'Guide Name',
     destination: 'Paris, France',
     totalAmount: 250,
   };
-  // --- END MOCK DATA ---
+  
 
   const { createBooking, loading: bookingLoading } = useBooking();
   const [clientSecret, setClientSecret] = useState('');
@@ -103,13 +103,13 @@ const BookingPage = () => {
           guideId: 'guide_abc',
           destination: MOCK_BOOKING.destination,
           totalAmount: MOCK_BOOKING.totalAmount,
-          // ...other details
+          
         };
 
-        // Call the context function
+        
         const response = await createBooking(bookingData); 
         
-        // The backend returns the clientSecret and the full booking object
+        
         setClientSecret(response.clientSecret);
         setBookingDetails(response.booking);
 
@@ -119,16 +119,16 @@ const BookingPage = () => {
       }
     };
 
-    // getPaymentIntent(); // Uncomment this when useBooking is fully wired
-    setClientSecret('pi_example_secret_123456789'); // FAKE SECRET FOR TESTING
+    
+    setClientSecret('pi_example_secret_123456789'); 
 
   }, [createBooking]);
 
-  // Stripe appearance options
+  
   const appearance = {
     theme: 'stripe',
     variables: {
-      colorPrimary: '#0ea5e9', // sky-500
+      colorPrimary: '#0ea5e9', 
       borderRadius: '8px',
     },
   };
@@ -138,7 +138,7 @@ const BookingPage = () => {
     appearance,
   };
 
-  // --- Render Logic ---
+  
   if (bookingLoading || (!clientSecret && !error)) {
     return <PageLoader text="Initializing secure payment..." />;
   }
@@ -151,7 +151,7 @@ const BookingPage = () => {
     <div className="flex justify-center items-start min-h-screen bg-gray-50 py-12">
       <div className="w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
         
-        {/* --- Booking Summary --- */}
+        {}
         <div className="space-y-4 md:pt-8">
           <h2 className="text-2xl font-semibold text-gray-800">Booking Summary</h2>
           <div className="p-6 bg-white rounded-lg shadow border border-gray-200">
@@ -171,7 +171,7 @@ const BookingPage = () => {
           </div>
         </div>
 
-        {/* --- Payment Form --- */}
+        {}
         <div className="p-8 bg-white rounded-lg shadow-lg border border-gray-200">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
             Enter Payment Details

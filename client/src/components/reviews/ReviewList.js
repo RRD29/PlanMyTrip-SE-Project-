@@ -1,8 +1,8 @@
 import React from 'react';
 import { SkeletonText } from '../common/Loaders';
-import { UserIcon } from '../../assets/icons'; // Using your icon pack
+import { UserIcon } from '../../assets/icons'; 
 
-// --- Star Icon (Filled) ---
+
 const StarIcon = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -18,7 +18,7 @@ const StarIcon = (props) => (
   </svg>
 );
 
-// --- Static Star Rating Display ---
+
 const StaticRating = ({ rating }) => {
   return (
     <div className="flex items-center">
@@ -37,9 +37,9 @@ const StaticRating = ({ rating }) => {
   );
 };
 
-// --- Single Review Item ---
+
 const ReviewItem = ({ review }) => {
-  // Format the date (e.g., "October 27, 2025")
+  
   const formattedDate = new Date(review.createdAt).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -49,7 +49,7 @@ const ReviewItem = ({ review }) => {
   return (
     <article className="py-6 border-b border-gray-200">
       <div className="flex items-center mb-3">
-        {/* Avatar Placeholder */}
+        {}
         <div className="flex-shrink-0 w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
           <UserIcon className="w-6 h-6 text-gray-500" />
         </div>
@@ -74,7 +74,7 @@ const ReviewItem = ({ review }) => {
   );
 };
 
-// --- List Skeleton Loader ---
+
 const ReviewListSkeleton = () => (
   <div className="space-y-6">
     {[1, 2].map((n) => (
@@ -94,12 +94,7 @@ const ReviewListSkeleton = () => (
   </div>
 );
 
-/**
- * Displays a list of reviews.
- * @param {object} props
- * @param {Array<object>} props.reviews - The array of review objects
- * @param {boolean} [props.loading=false] - Show loading skeleton
- */
+
 const ReviewList = ({ reviews = [], loading = false }) => {
   if (loading) {
     return <ReviewListSkeleton />;

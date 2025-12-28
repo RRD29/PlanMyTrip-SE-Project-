@@ -23,14 +23,14 @@ const SearchPlaces = () => {
     setSearchHistory(history);
   }, []);
 
-  // Save search history to localStorage
+  
   const saveToHistory = (searchTerm) => {
     const updatedHistory = [searchTerm, ...searchHistory.filter(item => item !== searchTerm)].slice(0, 5);
     setSearchHistory(updatedHistory);
     localStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
   };
 
-  // Fetch suggestions based on input
+  
   const fetchSuggestions = async (searchTerm) => {
     if (!searchTerm.trim()) {
       setSuggestions([]);
@@ -42,7 +42,7 @@ const SearchPlaces = () => {
         `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(searchTerm)}&limit=8&namespace=0&format=json&origin=*`
       );
       const [query, titles] = response.data;
-      // Filter suggestions to only include places/tourist attractions (basic filtering)
+      
       const placeSuggestions = titles.filter(title =>
         !title.includes('List of') &&
         !title.includes('Category:') &&
@@ -60,7 +60,7 @@ const SearchPlaces = () => {
     }
   };
 
-  // Debounced suggestion fetching
+  
   useEffect(() => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
@@ -76,7 +76,7 @@ const SearchPlaces = () => {
     };
   }, [query]);
 
-  // Fetch images for a place
+  
   const fetchImages = async (title) => {
     setImagesLoading(true);
     try {
@@ -87,7 +87,7 @@ const SearchPlaces = () => {
       const pageId = Object.keys(pages)[0];
       const imageTitles = pages[pageId].images || [];
 
-      // Get image URLs for the first 6 images
+      
       const imagePromises = imageTitles.slice(0, 6).map(async (img) => {
         try {
           const imgResponse = await axios.get(
@@ -111,11 +111,11 @@ const SearchPlaces = () => {
     }
   };
 
-  // Fetch weather for a place
+  
   const fetchWeather = async (placeName) => {
     setWeatherLoading(true);
     try {
-      // First, geocode the place to get coordinates
+      
       const geoResponse = await axios.get(
         `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(placeName)}&apiKey=${process.env.REACT_APP_GEOAPIFY_API_KEY}`
       );
@@ -128,7 +128,7 @@ const SearchPlaces = () => {
 
       const [lng, lat] = geoResponse.data.features[0].geometry.coordinates;
 
-      // Fetch weather data from OpenWeatherMap
+      
       const weatherResponse = await axios.get(
         `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=bb9b1cc74b30047f0f6662a4725c19ef&units=metric`
       );
@@ -173,9 +173,9 @@ const SearchPlaces = () => {
         setError('No exact match found. Please try a more specific search term.');
       } else {
         setResults([summary]);
-        // Fetch images for the place
+        
         fetchImages(searchQuery.trim());
-        // Fetch weather for the place
+        
         fetchWeather(searchQuery.trim());
       }
     } catch (err) {
@@ -252,7 +252,7 @@ const SearchPlaces = () => {
           </button>
         </div>
 
-        {/* Search History Dropdown */}
+        {}
         {showHistory && searchHistory.length > 0 && (
           <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
             <div className="flex justify-between items-center px-4 py-2 border-b border-gray-200">
@@ -287,7 +287,7 @@ const SearchPlaces = () => {
           </div>
         )}
 
-        {/* Suggestions Dropdown */}
+        {}
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
             {suggestions.map((suggestion, index) => (
@@ -308,7 +308,7 @@ const SearchPlaces = () => {
       <div className="max-w-4xl mx-auto">
         {results.map((place, index) => (
           <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-            {/* Multiple Images Grid */}
+            {}
             {(images.length > 0 || imagesLoading) && (
               <div className="p-4 bg-gray-50">
                 {imagesLoading ? (
@@ -329,7 +329,7 @@ const SearchPlaces = () => {
               </div>
             )}
 
-            {/* Weather Section */}
+            {}
             {(weather || weatherLoading) && (
               <div className="p-6 bg-blue-50 border-b border-blue-200">
                 <h3 className="text-xl font-semibold mb-4 text-blue-800">Current Weather</h3>
@@ -355,7 +355,7 @@ const SearchPlaces = () => {
               </div>
             )}
 
-            {/* Place Info */}
+            {}
             <div className="p-6">
               <h2 className="text-2xl font-bold mb-4">{place.title}</h2>
               <p className="text-gray-700 mb-6 leading-relaxed">{place.extract}</p>

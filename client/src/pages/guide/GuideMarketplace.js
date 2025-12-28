@@ -1,15 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import useApi from '../../hooks/useApi'; // <-- NOW USED
+import useApi from '../../hooks/useApi'; 
 import { PageLoader, SkeletonText } from '../../components/common/Loaders';
 import Button from '../../components/common/Button';
 import { StarIcon, MapPinIcon, CurrencyDollarIcon } from '../../assets/icons'; 
 
-// --- Single Guide Card Component (Keep the same) ---
+
 const GuideCard = ({ guide }) => {
   const navigate = useNavigate();
   
-  // Provide defaults for potentially missing fields
+  
   const displayRating = guide.guideProfile?.rating ? parseFloat(guide.guideProfile.rating).toFixed(1) : 0;
   const displayPrice = guide.guideProfile?.pricePerDay || 'N/A';
   const displayLocation = guide.guideProfile?.baseLocation || 'Unspecified Location';
@@ -18,7 +18,7 @@ const GuideCard = ({ guide }) => {
   return (
     <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden flex flex-col">
       <div className="flex-shrink-0">
-        {/* Placeholder avatar */}
+        {}
         <img className="h-48 w-full object-cover" src={guide.avatar} alt={guide.fullName} />
       </div>
       <div className="flex-1 p-6 flex flex-col justify-between">
@@ -54,7 +54,7 @@ const GuideCard = ({ guide }) => {
   );
 };
 
-// --- Main Marketplace Page ---
+
 const GuideMarketplace = () => {
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,20 +89,20 @@ const GuideMarketplace = () => {
   // The hook automatically runs on mount with the initial queryParams
   const { data: guides, loading, error, request } = useApi('/guides', { params: queryParams, method: 'GET' });
 
-  // This effect will re-run the API call *only* if the destination in the URL changes
+  
   useEffect(() => {
     const destination = searchParams.get('destination');
     if (destination) {
-      setLocation(destination); // Update the input field
+      setLocation(destination); 
       const newFilters = { ...appliedFilters, destination: destination, location: '' };
       setAppliedFilters(newFilters);
       request('/guides', { params: newFilters, method: 'GET' });
     }
-    // We only want this to run when the searchParams (URL) changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
+    
   }, [searchParams]);
 
-  // This function is called when the user clicks the "Search" or "Apply Filters" buttons
+  
   const applyAllFilters = () => {
     const destination = searchParams.get('destination');
     const newFilters = {
@@ -112,7 +112,7 @@ const GuideMarketplace = () => {
       maxPrice: maxPrice,
       minRating: minRating,
       minExperience: minExperience,
-      // If a destination is in the URL, it overrides the 'location' input for filtering
+      
       destination: destination || location, 
     };
     
@@ -140,7 +140,7 @@ const GuideMarketplace = () => {
             : "Find Your Perfect Guide"}
         </h1>
 
-        {/* --- Filter Bar --- */}
+        {}
         <div className="mb-8 p-6 bg-white rounded-lg shadow border">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div>
@@ -162,7 +162,7 @@ const GuideMarketplace = () => {
               <input
                 type="text"
                 id="location"
-                value={location} // This is pre-filled from the URL
+                value={location} 
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g., 'Paris', 'Tokyo'"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
@@ -173,7 +173,7 @@ const GuideMarketplace = () => {
             </div>
           </div>
 
-          {/* --- Advanced Filters --- */}
+          {}
           <div className="border-t pt-4">
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -248,7 +248,7 @@ const GuideMarketplace = () => {
           </div>
         </div>
 
-        {/* --- Guides Grid --- */}
+        {}
         {loading ? (
           <PageLoader text="Finding guides..." />
         ) : (

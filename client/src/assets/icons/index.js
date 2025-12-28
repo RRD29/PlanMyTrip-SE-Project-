@@ -1,6 +1,6 @@
 import React from 'react';
 
-// A generic function to pass props (like className for Tailwind)
+
 const Icon = ({ children, ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -14,9 +14,9 @@ const Icon = ({ children, ...props }) => (
   </svg>
 );
 
-// --- Individual Icons ---
 
-// For User Profiles, Login, etc.
+
+
 export const UserIcon = (props) => (
   <Icon {...props}>
     <path
@@ -27,7 +27,7 @@ export const UserIcon = (props) => (
   </Icon>
 );
 
-// For Destinations, Location
+
 export const MapPinIcon = (props) => (
   <Icon {...props}>
     <path
@@ -43,7 +43,7 @@ export const MapPinIcon = (props) => (
   </Icon>
 );
 
-// For Trip Duration, Availability
+
 export const CalendarIcon = (props) => (
   <Icon {...props}>
     <path
@@ -54,7 +54,7 @@ export const CalendarIcon = (props) => (
   </Icon>
 );
 
-// For Reviews, Ratings (Filled)
+
 export const StarIcon = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -70,7 +70,7 @@ export const StarIcon = (props) => (
   </svg>
 );
 
-// For Budget, Earnings
+
 export const CurrencyDollarIcon = (props) => (
   <Icon {...props}>
     <path
@@ -81,14 +81,14 @@ export const CurrencyDollarIcon = (props) => (
   </Icon>
 );
 
-// For Chat
+
 export const ChatBubbleIcon = (props) => (
     <Icon {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-3.86 8.25-8.625 8.25a9.75 9.75 0 01-4.375-.931l-3.328 1.424a.75.75 0 01-.976-.976l1.424-3.328A9.75 9.75 0 013 12c0-4.556 3.86-8.25 8.625-8.25S21 7.444 21 12z" />
     </Icon>
 );
 
-// For Home
+
 export const HomeIcon = (props) => (
   <Icon {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />

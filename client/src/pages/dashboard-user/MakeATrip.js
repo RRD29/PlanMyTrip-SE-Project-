@@ -4,7 +4,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import GeoapifyMapWrapper from "../../components/map/GeoapifyMapWrapper";
 import { calculateDistance } from "../../utils/geoapify-utils";
 
-// API key is now handled by GeoapifyMapWrapper via environment variable
+
 
 const MakeATrip = () => {
   const [search, setSearch] = useState("");
@@ -49,13 +49,13 @@ const MakeATrip = () => {
     }
   };
 
-  // Handle input change with debouncing
+  
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearch(value);
     setShowSuggestions(value.length > 0);
 
-    // Debounce suggestions
+    
     if (value.length > 2) {
       const timeoutId = setTimeout(() => fetchSuggestions(value), 300);
       return () => clearTimeout(timeoutId);
@@ -64,14 +64,14 @@ const MakeATrip = () => {
     }
   };
 
-  // Handle suggestion selection
+  
   const handleSuggestionClick = (suggestion) => {
     setSearch(suggestion.name);
     setShowSuggestions(false);
     handleAddPlaceFromSuggestion(suggestion);
   };
 
-  // ✅ Convert search text to lat-lon using Geoapify geocoder
+  
   const handleAddPlace = async () => {
     if (!search.trim()) return;
 
@@ -94,7 +94,7 @@ const MakeATrip = () => {
 
       setBucket((prev) => {
         const updated = [...prev, newPlace];
-        // Draw route after adding place
+        
         if (updated.length >= 2) {
           drawRoute(updated);
         }
@@ -107,7 +107,7 @@ const MakeATrip = () => {
     }
   };
 
-  // Add place from suggestion
+  
   const handleAddPlaceFromSuggestion = async (suggestion) => {
     const newPlace = {
       id: Date.now(),
@@ -118,7 +118,7 @@ const MakeATrip = () => {
 
     setBucket((prev) => {
       const updated = [...prev, newPlace];
-      // Draw route after adding place
+      
       if (updated.length >= 2) {
         drawRoute(updated);
       }
@@ -152,7 +152,7 @@ const MakeATrip = () => {
         lon: position.coords.longitude,
       };
     } catch (err) {
-      // Fallback to prompt
+      
       const currentLocation = prompt("Enter your current location:");
       if (!currentLocation) return;
 
@@ -177,7 +177,7 @@ const MakeATrip = () => {
       }
     }
 
-    // Implement nearest neighbor TSP approximation
+    
     const remaining = [...bucket];
     const optimizedBucket = [];
     let currentPoint = current;
@@ -199,32 +199,32 @@ const MakeATrip = () => {
       currentPoint = nextPlace;
     }
 
-    // Update bucket with optimized order
+    
     setBucket(optimizedBucket);
 
-    // Set itinerary
+    
     const fullItinerary = [current, ...optimizedBucket];
     setItinerary(fullItinerary);
     setShowItinerary(true);
 
-    // Draw route with current location
+    
     drawRoute(optimizedBucket, current);
   };
 
-  // Handle drag end to reorder bucket
+  
   const onDragEnd = (result) => {
     if (!result.destination) return;
     const items = Array.from(bucket);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     setBucket(items);
-    // Draw route after reordering
+    
     if (items.length >= 2) {
       drawRoute(items);
     }
   };
 
-  // ✅ Routing Function
+  
   const drawRoute = async (places, start = null) => {
     const allPlaces = start ? [start, ...places] : places;
     if (allPlaces.length < 2) return;
@@ -248,11 +248,11 @@ const MakeATrip = () => {
       const km = (data.features[0].properties.distance / 1000).toFixed(2);
       setDistance(km);
 
-      // Convert GeoJSON to coordinates for Polyline
-      // Handle MultiLineString geometry
+      
+      
       let coordinates = [];
       if (routeGeo.type === 'MultiLineString') {
-        // Flatten all line segments into a single array
+        
         coordinates = routeGeo.coordinates.flat().map(coord => ({
           lat: coord[1],
           lng: coord[0]
@@ -268,12 +268,12 @@ const MakeATrip = () => {
       setRoute(coordinates);
     } catch (error) {
       console.error("Routing error:", error);
-      // Clear route on error
+      
       setRoute([]);
     }
   };
 
-  // Add ids to existing bucket items if missing
+  
   useEffect(() => {
     setBucket(prev => prev.map((p, i) => p.id ? p : { ...p, id: Date.now() + i }));
   }, []);
@@ -281,7 +281,7 @@ const MakeATrip = () => {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left Panel */}
+        {}
         <div className="bg-white shadow-md rounded-lg p-4">
           <h2 className="text-2xl font-bold mb-3">Make a Trip</h2>
 
@@ -385,7 +385,7 @@ const MakeATrip = () => {
           </button>
         </div>
 
-        {/* Right Panel (Map) */}
+        {}
         <div className="h-[520px] rounded-lg overflow-hidden shadow">
           <GeoapifyMapWrapper
             center={bucket[0] ? [bucket[0].lat, bucket[0].lon] : [28.6139, 77.2090]}

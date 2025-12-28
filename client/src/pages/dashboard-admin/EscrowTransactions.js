@@ -3,16 +3,16 @@ import useApi from '../../hooks/useApi';
 import { PageLoader, SkeletonText } from '../../components/common/Loaders';
 import Button from '../../components/common/Button';
 
-// --- MOCK DATA (Remove when API is ready) ---
+
 const MOCK_TRANSACTIONS = [
   { _id: 't1', bookingId: 'b101', user: 'Alice Smith', guide: 'Bob Johnson', amount: 250, status: 'Paid/Escrowed', date: '2025-10-20T10:00:00Z' },
   { _id: 't2', bookingId: 'b102', user: 'Charlie Brown', guide: 'David Lee', amount: 400, status: 'Completed', date: '2025-10-19T11:30:00Z' },
   { _id: 't3', bookingId: 'b103', user: 'Eve Davis', guide: 'Frank White', amount: 320, status: 'Disputed', date: '2025-10-18T14:15:00Z' },
   { _id: 't4', bookingId: 'b104', user: 'Grace Hall', guide: 'Bob Johnson', amount: 180, status: 'Paid/Escrowed', date: '2025-10-17T09:05:00Z' },
 ];
-// ---------------------------------------------
 
-// Skeleton row for loading state
+
+
 const TransactionRowSkeleton = () => (
   <tr className="animate-pulse">
     <td className="px-6 py-4 whitespace-nowrap"><SkeletonText className="h-5 w-1/2" /></td>
@@ -25,7 +25,7 @@ const TransactionRowSkeleton = () => (
   </tr>
 );
 
-// Helper to get color for status badge
+
 const getStatusColor = (status) => {
   switch (status) {
     case 'Paid/Escrowed':
@@ -42,21 +42,21 @@ const getStatusColor = (status) => {
 };
 
 const EscrowTransactions = () => {
-  // const { data: transactions, loading, error } = useApi('/admin/transactions');
+  
   const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleManualRelease = (transactionId) => {
     if (window.confirm('Manually release payment to guide? This cannot be undone.')) {
-      // API call to release funds
+      
       console.log(`Releasing funds for ${transactionId}`);
     }
   };
   
   const handleRefund = (transactionId) => {
     if (window.confirm('Refund payment to user? This cannot be undone.')) {
-      // API call to refund user
+      
       console.log(`Refunding user for ${transactionId}`);
     }
   };

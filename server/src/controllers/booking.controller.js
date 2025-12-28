@@ -5,9 +5,9 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { 
     createBookingService, 
     verifyOtpService 
-} from '../services/booking.service.js'; // We will create this
+} from '../services/booking.service.js'; 
 
-// --- 1. Create a New Booking (and Payment Intent) ---
+
 export const createBooking = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const { guideId, startDate, endDate, totalAmount, tripDetails } = req.body;
@@ -16,7 +16,7 @@ export const createBooking = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Missing required booking details");
     }
 
-    // We delegate all the complex logic to a service
+    
     const { booking, clientSecret } = await createBookingService(userId, {
         guideId,
         startDate,
@@ -34,17 +34,17 @@ export const createBooking = asyncHandler(async (req, res) => {
     );
 });
 
-// --- 2. Verify OTP (The Core Escrow Logic) ---
+
 export const verifyOtp = asyncHandler(async (req, res) => {
     const { bookingId } = req.params;
     const { otp } = req.body;
-    const user = req.user; // User object (user or guide) from verifyJWT
+    const user = req.user; 
 
     if (!otp) {
         throw new ApiError(400, "OTP is required");
     }
 
-    // Delegate the complex verification and payment release to a service
+    
     const updatedBooking = await verifyOtpService(user, bookingId, otp);
 
     return res.status(200).json(
@@ -52,7 +52,7 @@ export const verifyOtp = asyncHandler(async (req, res) => {
     );
 });
 
-// --- 3. Get Bookings for the Logged-in User (User or Guide) ---
+
 export const getMyBookings = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const userRole = req.user.role;

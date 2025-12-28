@@ -8,7 +8,7 @@ const Register = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('user'); // Default role
+  const [role, setRole] = useState('user'); 
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   
@@ -36,8 +36,8 @@ const Register = () => {
 
       setMessage('Registration successful! Redirecting to profile setup...');
 
-      // 3. REDIRECT based on the selected role
-      // Guides are sent to their profile edit page to ensure data is filled.
+      
+      
       const redirectPath = role === 'guide' ? '/dashboard-guide/profile' : '/dashboard'; 
       
       setTimeout(() => navigate(redirectPath, { replace: true }), 100);
@@ -74,7 +74,7 @@ const Register = () => {
             </p>
           )}
 
-          {/* Full Name Input */}
+          {}
           <div>
             <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
               Full Name
@@ -89,7 +89,7 @@ const Register = () => {
             />
           </div>
           
-          {/* Email Input */}
+          {}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email address
@@ -105,7 +105,7 @@ const Register = () => {
             />
           </div>
 
-          {/* Password Input */}
+          {}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
@@ -121,7 +121,7 @@ const Register = () => {
             />
           </div>
           
-          {/* Role Selector */}
+          {}
           <div>
             <label className="block text-sm font-medium text-gray-700">I am a...</label>
             <div className="mt-2 flex space-x-4">

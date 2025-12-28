@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { geocodeAddress, fetchFamousPlaces, fetchRailwayStation, calculateDistance } from '../../utils/geoapify-utils'; // <-- New Geocoding Function
-import GeoapifyMapWrapper from '../../components/map/GeoapifyMapWrapper'; // Assuming you kept the original filename
-import Button from '../../components/common/Button'; // Assuming you use this Button component
-import Modal from '../../components/common/Modal'; // Import Modal component
-import { useBooking } from '../../contexts/BookingContext'; // Assuming you use this hook
+import { geocodeAddress, fetchFamousPlaces, fetchRailwayStation, calculateDistance } from '../../utils/geoapify-utils'; 
+import GeoapifyMapWrapper from '../../components/map/GeoapifyMapWrapper'; 
+import Button from '../../components/common/Button'; 
+import Modal from '../../components/common/Modal'; 
+import { useBooking } from '../../contexts/BookingContext'; 
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import axios from 'axios';
 
-// Default map center (e.g., center of the US)
+
 const initialCenter = [39.8283, -98.5795]; 
 
-// Close (X) Icon - If needed for the itinerary list
+
 const CloseIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -23,7 +23,7 @@ const TripPlanner = () => {
     const navigate = useNavigate();
     const { createBooking, loading: isCreatingBooking } = useBooking();
 
-    // State for the simple input field
+    
     const [addressInput, setAddressInput] = useState('');
 
     // Autocomplete suggestions
@@ -48,10 +48,10 @@ const TripPlanner = () => {
     // Form state
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [radius, setRadius] = useState('10'); // Default radius in km
-    const [isCitySearch, setIsCitySearch] = useState(false); // Flag to detect city search
+    const [radius, setRadius] = useState('10'); 
+    const [isCitySearch, setIsCitySearch] = useState(false); 
 
-    // Place details modal state
+    
     const [selectedPlace, setSelectedPlace] = useState(null);
     const [placeDetails, setPlaceDetails] = useState(null);
     const [placeImages, setPlaceImages] = useState([]);
@@ -64,9 +64,9 @@ const TripPlanner = () => {
     const [tripDates, setTripDates] = useState([]);
 
 
-    // --- Handlers ---
+    
 
-    // Fetch autocomplete suggestions
+    
     const fetchSuggestions = async (query) => {
         if (!query.trim()) {
             setSuggestions([]);
@@ -93,13 +93,13 @@ const TripPlanner = () => {
         }
     };
 
-    // Handle input change with debouncing
+    
     const handleAddressInputChange = (e) => {
         const value = e.target.value;
         setAddressInput(value);
         setShowSuggestions(value.length > 0);
 
-        // Debounce suggestions
+        
         if (value.length > 2) {
             const timeoutId = setTimeout(() => fetchSuggestions(value), 300);
             return () => clearTimeout(timeoutId);
@@ -108,11 +108,11 @@ const TripPlanner = () => {
         }
     };
 
-    // Handle suggestion selection
+    
     const handleSuggestionClick = (suggestion) => {
         setAddressInput(suggestion.name);
         setShowSuggestions(false);
-        // Trigger search with the selected suggestion
+        
         const input = suggestion.name;
         const cityDetected = isCity(input);
         setIsCitySearch(cityDetected);
@@ -120,12 +120,12 @@ const TripPlanner = () => {
         if (cityDetected) {
             performCitySearch(input, radius);
         } else {
-            // Regular geocoding for specific addresses
+            
             handleGeocodeAndAddMarkerFromSuggestion(suggestion);
         }
     };
 
-    // Add marker from suggestion
+    
     const handleGeocodeAndAddMarkerFromSuggestion = async (suggestion) => {
         try {
             setLoading(true);
@@ -136,15 +136,15 @@ const TripPlanner = () => {
                 lat: suggestion.lat,
                 lng: suggestion.lon,
                 info: suggestion.name,
-                distance: 'N/A', // Not applicable for single place
-                budget: Math.floor(Math.random() * 100) + 50, // Mock budget
-                accommodation: `Hotel near ${suggestion.name}` // Mock accommodation
+                distance: 'N/A', 
+                budget: Math.floor(Math.random() * 100) + 50, 
+                accommodation: `Hotel near ${suggestion.name}` 
             };
 
-            // Update state
+            
             if (!itinerary.find(p => p.name === newPlace.name)) {
                 setItinerary(prev => [...prev, newPlace]);
-                // Center map on the new place
+                
                 setMapCenter([newPlace.lat, newPlace.lng]);
                 setZoom(14);
             }
@@ -157,30 +157,30 @@ const TripPlanner = () => {
         }
     };
 
-    // Helper function to detect if input is a city
+    
     const isCity = (input) => {
         const cityKeywords = ['delhi', 'mumbai', 'bangalore', 'chennai', 'kolkata', 'hyderabad', 'pune', 'ahmedabad', 'jaipur', 'surat', 'lucknow', 'kanpur', 'nagpur', 'indore', 'thane', 'bhopal', 'visakhapatnam', 'pimpri-chinchwad', 'patna', 'vadodara', 'ghaziabad', 'ludhiana', 'agra', 'nashik', 'faridabad', 'meerut', 'rajkot', 'kalyan-dombivli', 'vasai-virar', 'varanasi', 'srinagar', 'aurangabad', 'dhanbad', 'amritsar', 'navi mumbai', 'allahabad', 'howrah', 'ranchi', 'jabalpur', 'gwalior', 'coimbatore', 'vijayawada', 'jodhpur', 'madurai', 'raipur', 'kota', 'guwahati', 'chandigarh', 'solapur', 'hubli-dharwad', 'bareilly', 'moradabad', 'mysore', 'gurgaon', 'aligarh', 'jalandhar', 'tiruchirappalli', 'bhubaneswar', 'salem', 'warangal', 'guntur', 'bhiwandi', 'saharanpur', 'gorakhpur', 'bikaner', 'amravati', 'noida', 'jamshedpur', 'bhilai', 'cuttack', 'firozabad', 'kochi', 'bhavnagar', 'dehradun', 'durgapur', 'asansol', 'nanded', 'kolhapur', 'ajmer', 'gulbarga', 'jamnagar', 'ujjain', 'loni', 'siliguri', 'jhansi', 'ulhasnagar', 'nellore', 'jammu', 'mangalore', 'erode', 'belgaum', 'ambattur', 'tirunelveli', 'malegaon', 'gaya', 'jalgaon', 'udaipur', 'maheshtala', 'tiruppur', 'davanagere', 'kozhikode', 'akola', 'kurnool', 'rajpur sonarpur', 'bokaro', 'south dum dum', 'bellary', 'patiala', 'gopalpur', 'agartala', 'dhule', 'bhagalpur', 'latur', 'muzaffarpur', 'mathura', 'kamarhati', 'sambalpur', 'parbhani', 'allahabad', 'bihar sharif', 'burhanpur', 'singrauli', 'nadiad', 'secunderabad', 'nashik', 'shimla', 'haridwar', 'rourkela', 'panchkula', 'darbhanga', 'silchar', 'ambala', 'ongole', 'nandyal', 'cuddalore', 'ratlam', 'kharagpur', 'dindigul', 'panihati', 'katni', 'smvd', 'bhuj', 'rewari', 'mirzapur', 'korba', 'raichur', 'bidar', 'madhyamgram', 'harihar', 'davanagere', 'kottayam', 'kollam', 'nellore', 'tiruvottiyur', 'pondicherry', 'barasat', 'alwar', 'jhunjhunun', 'puri', 'rohtak', 'raiganj', 'sirsa', 'kishanganj', 'gangtok', 'shimla', 'panaji', 'imphal', 'shillong', 'aizawl', 'kohima', 'itanagar', 'dispur', 'port blair', 'daman', 'diu', 'silvassa', 'leh', 'kargil', 'srinagar', 'jammu', 'chandigarh', 'delhi', 'mumbai', 'kolkata', 'chennai', 'bangalore', 'hyderabad', 'pune', 'ahmedabad', 'surat', 'lucknow', 'kanpur', 'nagpur', 'patna', 'indore', 'vadodara', 'bhopal', 'coimbatore', 'ludhiana', 'agra', 'madurai', 'nashik', 'faridabad', 'meerut', 'rajkot', 'jabalpur', 'asansol', 'allahabad', 'amritsar', 'allahabad', 'dhanbad', 'ranchi', 'howrah', 'jodhpur', 'raipur', 'kota', 'guwahati', 'solapur', 'hubli', 'bareilly', 'moradabad', 'aligarh', 'jalandhar', 'tiruchirappalli', 'bhubaneswar', 'salem', 'warangal', 'guntur', 'gorakhpur', 'bikaner', 'amravati', 'jamshedpur', 'bhilai', 'cuttack', 'firozabad', 'kochi', 'bhavnagar', 'dehradun', 'durgapur', 'nanded', 'kolhapur', 'ajmer', 'gulbarga', 'jamnagar', 'ujjain', 'siliguri', 'jhansi', 'ulhasnagar', 'jammu', 'mangalore', 'erode', 'belgaum', 'tirunelveli', 'malegaon', 'gaya', 'jalgaon', 'udaipur', 'tiruppur', 'davanagere', 'kozhikode', 'akola', 'kurnool', 'bokaro', 'patiala', 'dhule', 'bhagalpur', 'latur', 'muzaffarpur', 'mathura', 'sambalpur', 'parbhani', 'bihar sharif', 'burhanpur', 'singrauli', 'nadiad', 'secunderabad', 'shimla', 'haridwar', 'rourkela', 'panchkula', 'darbhanga', 'silchar', 'ambala', 'ongole', 'nandyal', 'cuddalore', 'ratlam', 'kharagpur', 'dindigul', 'katni', 'bhuj', 'rewari', 'mirzapur', 'korba', 'raichur', 'bidar', 'harihar', 'kottayam', 'kollam', 'tiruvottiyur', 'pondicherry', 'barasat', 'alwar', 'jhunjhunun', 'puri', 'rohtak', 'raiganj', 'sirsa', 'kishanganj', 'gangtok', 'panaji', 'imphal', 'shillong', 'aizawl', 'kohima', 'itanagar', 'dispur', 'port blair', 'daman', 'diu', 'silvassa', 'leh', 'kargil'];
         const lowerInput = input.toLowerCase();
-        return cityKeywords.some(keyword => lowerInput.includes(keyword)) || lowerInput.split(',').length === 1; // Simple heuristic: if no comma, likely a city
+        return cityKeywords.some(keyword => lowerInput.includes(keyword)) || lowerInput.split(',').length === 1; 
     };
 
-    // Refactored search function
+    
     const performCitySearch = useCallback(async (city, rad) => {
         setLoading(true);
         setError(null);
 
         try {
-            // First, geocode the city to get its coordinates
+            
             const cityResult = await geocodeAddress(city);
 
-            // Fetch famous places for the city within radius from the city center
-            const places = await fetchFamousPlaces(city, 10, parseInt(rad)); // Fetch up to 10 places within radius
+            
+            const places = await fetchFamousPlaces(city, 10, parseInt(rad)); 
 
             if (places.length === 0) {
                 throw new Error('No famous places found for this city.');
             }
 
-            // Calculate distances between places (assuming sequential visit)
+            
             const placesWithDistances = places.map((place, index) => {
                 let distance = 0;
                 if (index > 0) {
@@ -189,19 +189,19 @@ const TripPlanner = () => {
                 }
                 return {
                     ...place,
-                    distance: distance.toFixed(2), // Distance in km
-                    budget: Math.floor(Math.random() * 100) + 50, // Mock budget per place
-                    accommodation: `Hotel near ${place.name}`, // Mock accommodation
-                    openingHours: place.openingHours // Include opening hours
+                    distance: distance.toFixed(2), 
+                    budget: Math.floor(Math.random() * 100) + 50, 
+                    accommodation: `Hotel near ${place.name}`, 
+                    openingHours: place.openingHours 
                 };
             });
 
-            // Clear existing itinerary and add new places
+            
             setItinerary(placesWithDistances);
 
-            // Center map on the city coordinates
+            
             setMapCenter([cityResult.lat, cityResult.lng]);
-            setZoom(12); // Zoom out a bit to show multiple places
+            setZoom(12); 
 
             setLastSearchedCity(city);
 
@@ -223,7 +223,7 @@ const TripPlanner = () => {
         if (cityDetected) {
             await performCitySearch(input, radius);
         } else {
-            // Regular geocoding for specific addresses
+            
             try {
                 setLoading(true);
                 setError(null);
@@ -235,15 +235,15 @@ const TripPlanner = () => {
                     lat: result.lat,
                     lng: result.lng,
                     info: result.fullAddress,
-                    distance: 'N/A', // Not applicable for single place
-                    budget: Math.floor(Math.random() * 100) + 50, // Mock budget
-                    accommodation: `Hotel near ${result.fullAddress}` // Mock accommodation
+                    distance: 'N/A', 
+                    budget: Math.floor(Math.random() * 100) + 50, 
+                    accommodation: `Hotel near ${result.fullAddress}` 
                 };
 
-                // Update state
+                
                 if (!itinerary.find(p => p.name === newPlace.name)) {
                     setItinerary(prev => [...prev, newPlace]);
-                    // Center map on the new place
+                    
                     setMapCenter([newPlace.lat, newPlace.lng]);
                     setZoom(14);
                 }
@@ -272,7 +272,7 @@ const TripPlanner = () => {
         }
     };
 
-    // Handle drag and drop reordering
+    
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
@@ -283,13 +283,13 @@ const TripPlanner = () => {
         setItinerary(items);
     };
 
-    // Function to generate dated itinerary
+    
     const generateDatedItinerary = useCallback(() => {
         if (!startDate || !endDate || itinerary.length === 0) return;
 
         const start = new Date(startDate);
         const end = new Date(endDate);
-        const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1; // Inclusive days
+        const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1; 
 
         const totalPlaces = itinerary.length;
         const basePlacesPerDay = Math.floor(totalPlaces / totalDays);
@@ -302,13 +302,13 @@ const TripPlanner = () => {
             const date = new Date(start);
             date.setDate(start.getDate() + i);
 
-            // Distribute extra places to the first 'extraPlaces' days
+            
             const placesForThisDay = basePlacesPerDay + (i < extraPlaces ? 1 : 0);
             const dayPlaces = itinerary.slice(placeIndex, placeIndex + placesForThisDay);
             placeIndex += placesForThisDay;
 
             datedPlan.push({
-                date: date.toISOString().split('T')[0], // YYYY-MM-DD
+                date: date.toISOString().split('T')[0], 
                 places: dayPlaces
             });
         }
@@ -316,10 +316,10 @@ const TripPlanner = () => {
         setDatedItinerary(datedPlan);
     }, [startDate, endDate, itinerary]);
 
-    // Generate dated itinerary when dates or itinerary change
+    
     useEffect(() => {
         generateDatedItinerary();
-        // Generate trip dates array
+        
         if (startDate && endDate) {
             const dates = [];
             const start = new Date(startDate);
@@ -336,27 +336,27 @@ const TripPlanner = () => {
         }
     }, [startDate, endDate, itinerary, generateDatedItinerary]);
 
-    // Re-run search when radius changes if a city was previously searched
+    
     useEffect(() => {
         if (lastSearchedCity && radius) {
             performCitySearch(lastSearchedCity, radius);
         }
     }, [radius, lastSearchedCity, performCitySearch]);
 
-    // --- THIS IS THE EDITED FUNCTION ---
+    
     const handleFindGuides = () => {
         if (!lastSearchedCity) {
             alert('Please search for a city destination first.');
             return;
         }
 
-        // Navigate to guides page with the last searched city as query param
+        
         const destination = lastSearchedCity;
         navigate(`/guides?destination=${encodeURIComponent(destination)}`);
     };
-    // --- END OF EDIT ---
+    
 
-    // Function to initialize editable schedules
+    
     const initializeEditableSchedules = () => {
         const schedules = datedItinerary.map(day => ({
             date: day.date,
@@ -365,26 +365,26 @@ const TripPlanner = () => {
         setEditableSchedules(schedules);
     };
 
-    // Function to handle edit mode toggle
+    
     const handleEditToggle = () => {
         if (!isEditMode) {
-            // Entering edit mode: initialize editable schedules
+            
             initializeEditableSchedules();
         } else {
-            // Exiting edit mode: save the changes
+            
             setSavedSchedules([...editableSchedules]);
         }
         setIsEditMode(!isEditMode);
     };
 
-    // Function to update editable schedule
+    
     const updateScheduleItem = (dayIndex, itemIndex, field, value) => {
         const updatedSchedules = [...editableSchedules];
         updatedSchedules[dayIndex].schedule[itemIndex][field] = value;
         setEditableSchedules(updatedSchedules);
     };
 
-    // Function to add a new schedule item
+    
     const addScheduleItem = (dayIndex, insertIndex) => {
         const updatedSchedules = [...editableSchedules];
         const newItem = { time: '12:00', activity: 'New Activity' };
@@ -392,18 +392,18 @@ const TripPlanner = () => {
         setEditableSchedules(updatedSchedules);
     };
 
-    // Function to remove a schedule item
+    
     const removeScheduleItem = (dayIndex, itemIndex) => {
         const updatedSchedules = [...editableSchedules];
         updatedSchedules[dayIndex].schedule.splice(itemIndex, 1);
         setEditableSchedules(updatedSchedules);
     };
 
-    // Function to fetch place details from Wikipedia
+    
     const fetchPlaceDetails = async (placeName) => {
         setPlaceDetailsLoading(true);
         try {
-            // Fetch summary from Wikipedia
+            
             const summaryResponse = await axios.get(
                 `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(placeName)}`
             );
@@ -415,7 +415,7 @@ const TripPlanner = () => {
 
             setPlaceDetails(summary);
 
-            // Fetch images
+            
             const imageResponse = await axios.get(
                 `https://en.wikipedia.org/w/api.php?action=query&prop=images&titles=${encodeURIComponent(placeName)}&format=json&origin=*`
             );
@@ -448,18 +448,18 @@ const TripPlanner = () => {
         }
     };
 
-    // Function to handle place click
+    
     const handlePlaceClick = (place) => {
         setSelectedPlace(place);
         setIsPlaceDetailsModalOpen(true);
         fetchPlaceDetails(place.name);
     };
 
-    // Function to fetch current weather for a place
+    
     const fetchWeatherForPlace = async (place) => {
         setPlaceWeatherLoading(true);
         try {
-            // Geocode the place to get coordinates
+            
             const geoResponse = await axios.get(
                 `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(place.name)}&apiKey=${process.env.REACT_APP_GEOAPIFY_API_KEY}`
             );
@@ -470,7 +470,7 @@ const TripPlanner = () => {
 
             const [lng, lat] = geoResponse.data.features[0].geometry.coordinates;
 
-            // Fetch current weather
+            
             const weatherResponse = await axios.get(
                 `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=bb9b1cc74b30047f0f6662a4725c19ef&units=metric`
             );
@@ -506,14 +506,14 @@ const TripPlanner = () => {
         }
     };
 
-    // Function to handle weather check
+    
     const handleCheckWeather = (place) => {
         setSelectedWeatherPlace(place);
         setIsWeatherModalOpen(true);
         fetchWeatherForPlace(place);
     };
 
-    // Function to download schedule as text file
+    
     const downloadSchedule = () => {
         const schedulesToDownload = savedSchedules.length > 0 ? savedSchedules : datedItinerary.map(day => ({
             date: day.date,
@@ -541,81 +541,81 @@ const TripPlanner = () => {
         URL.revokeObjectURL(url);
     };
 
-    // Prepare markers for the GeoapifyMapWrapper
+    
     const mapMarkers = itinerary.map(place => ({
         lat: place.lat,
         lng: place.lng,
-        info: place.name // Passed as the popup content
+        info: place.name 
     }));
 
-    // Function to generate day-wise schedule
+    
     const generateDaySchedule = (day) => {
         const schedule = [];
         const places = day.places;
 
-        // Breakfast at 8 AM
+        
         schedule.push({ time: '08:00', activity: 'Breakfast' });
 
-        // Start journey at 9 AM
+        
         schedule.push({ time: '09:00', activity: 'Start Journey' });
 
-        let currentTime = 9 * 60; // 9 AM in minutes
+        let currentTime = 9 * 60; 
         let lunchInserted = false;
 
         places.forEach((place, index) => {
-            // Estimate travel time based on distance (10-30 min per km, min 15 min)
+            
             const distance = place.distance ? parseFloat(place.distance) : 0;
-            const travelTime = Math.max(15, Math.min(30 + distance * 5, 120)); // 5 min per km, cap at 2 hours
+            const travelTime = Math.max(15, Math.min(30 + distance * 5, 120)); 
             currentTime += travelTime;
 
-            // Round time
+            
             const arrivalTime = Math.round(currentTime);
             const hours = Math.floor(arrivalTime / 60);
             const minutes = arrivalTime % 60;
             const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
             schedule.push({ time: timeString, activity: `Arrive at ${place.name}` });
 
-            // Add visit time (assume 1-2 hours per place)
-            const visitTime = 90; // 1.5 hours
+            
+            const visitTime = 90; 
             currentTime += visitTime;
 
-            // Insert lunch around 12-1 PM if not inserted and time is appropriate
+            
             if (!lunchInserted && currentTime >= 12 * 60 && currentTime <= 13 * 60) {
                 schedule.push({ time: '12:30', activity: 'Lunch' });
                 lunchInserted = true;
-                currentTime = Math.max(currentTime, 13 * 60); // Ensure time moves to after lunch
+                currentTime = Math.max(currentTime, 13 * 60); 
             }
         });
 
-        // If lunch not inserted, add it at 12:30
+        
         if (!lunchInserted) {
             schedule.push({ time: '12:30', activity: 'Lunch' });
         }
 
-        // Add afternoon activities or free time if schedule ends early
-        if (currentTime < 17 * 60) { // Before 5 PM
+        
+        if (currentTime < 17 * 60) { 
             schedule.push({ time: '15:00', activity: 'Free time / Afternoon activities' });
         }
 
-        // Dinner at 7 PM
+        
         schedule.push({ time: '19:00', activity: 'Dinner' });
 
-        // Sort schedule by time
+        
         return schedule.sort((a, b) => a.time.localeCompare(b.time));
     };
 
-    // --- RENDER LOGIC ---
-    // Note: We no longer need to check isLoaded or loadError from Google's useJsApiLoader
-    // since we're using a simple HTML input and Geoapify/Leaflet.
+    
+    
+    
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-100px)]">
             
-            {/* --- Left Panel: Form & Itinerary --- */}
+            {}
             <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow border overflow-y-auto space-y-6">
                 <h1 className="text-3xl font-bold text-gray-900">Plan Your Trip</h1>
                 
-                {/* --- Step 1: Form Inputs (Replaced Google Autocomplete) --- */}
+                {}
                 <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleGeocodeAndAddMarker(); }}>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">
@@ -649,7 +649,7 @@ const TripPlanner = () => {
                                 onClick={handleGeocodeAndAddMarker}
                                 loading={loading}
                                 disabled={loading || !addressInput.trim()}
-                                type="button" // Important to prevent form submission if not ready
+                                type="button" 
                             >
                                 {loading ? 'Searching...' : 'Search'}
                             </Button>
@@ -661,7 +661,7 @@ const TripPlanner = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        {/* Date Inputs */}
+                        {}
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Start Date</label>
                           <input
@@ -696,7 +696,7 @@ const TripPlanner = () => {
                     </div>
                 </form>
 
-                {/* --- Step 2: Itinerary List --- */}
+                {}
                 <div>
                     <h2 className="text-xl font-semibold text-gray-800">Your Itinerary ({itinerary.length})</h2>
                     {itinerary.length === 0 ? (
@@ -773,7 +773,7 @@ const TripPlanner = () => {
                     )}
                 </div>
 
-                {/* --- Step 3: Action Buttons --- */}
+                {}
                 <div className="pt-4 border-t space-y-3">
                     <div className="flex space-x-3">
                         <Button
@@ -799,17 +799,17 @@ const TripPlanner = () => {
                 </div>
             </div>
 
-            {/* --- Right Panel: Map (Geoapify) --- */}
+            {}
             <div className="lg:col-span-2 rounded-lg overflow-hidden shadow">
-                {/* Use GeoapifyMapWrapper and pass the cleaned marker data */}
+                {}
                 <GeoapifyMapWrapper
-                    center={mapCenter} // Array [lat, lng]
+                    center={mapCenter} 
                     zoom={zoom}
                     markers={mapMarkers}
                 />
             </div>
 
-            {/* --- Weather Modal --- */}
+            {}
             <Modal
                 isOpen={isWeatherModalOpen}
                 onClose={() => {
@@ -868,7 +868,7 @@ const TripPlanner = () => {
                 </div>
             </Modal>
 
-            {/* --- Place Details Modal --- */}
+            {}
             <Modal
                 isOpen={isPlaceDetailsModalOpen}
                 onClose={() => {
@@ -887,7 +887,7 @@ const TripPlanner = () => {
                         </div>
                     ) : placeDetails ? (
                         <>
-                            {/* Place Images */}
+                            {}
                             {placeImages.length > 0 && (
                                 <div className="mb-6">
                                     <h3 className="text-lg font-semibold mb-3">Images</h3>
@@ -905,7 +905,7 @@ const TripPlanner = () => {
                                 </div>
                             )}
 
-                            {/* Place Description */}
+                            {}
                             <div>
                                 <h3 className="text-lg font-semibold mb-3">About {placeDetails.title}</h3>
                                 <div className="prose max-w-none">
@@ -913,7 +913,7 @@ const TripPlanner = () => {
                                 </div>
                             </div>
 
-                            {/* Wikipedia Link */}
+                            {}
                             {placeDetails.content_urls?.desktop?.page && (
                                 <div className="pt-4 border-t">
                                     <a
@@ -938,7 +938,7 @@ const TripPlanner = () => {
                 </div>
             </Modal>
 
-            {/* --- Schedule Modal --- */}
+            {}
             <Modal
                 isOpen={isScheduleModalOpen}
                 onClose={() => setIsScheduleModalOpen(false)}
@@ -946,7 +946,7 @@ const TripPlanner = () => {
                 size="xl"
             >
                 <div className="space-y-4">
-                    {/* Action Buttons */}
+                    {}
                     <div className="flex justify-between items-center">
                         <div className="flex space-x-2">
                             <button
@@ -967,7 +967,7 @@ const TripPlanner = () => {
                         </span>
                     </div>
 
-                    {/* Schedule Content */}
+                    {}
                     <div className="max-h-96 overflow-y-auto space-y-6">
                         {(isEditMode ? editableSchedules : (savedSchedules.length > 0 ? savedSchedules : datedItinerary.map(day => ({
                             date: day.date,

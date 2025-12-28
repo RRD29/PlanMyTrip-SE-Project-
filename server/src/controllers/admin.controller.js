@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
-// --- Get All Users (Admin Only) ---
+
 export const getAllUsers = asyncHandler(async (req, res) => {
     const users = await User.find({})
         .select("-password -refreshToken")
@@ -14,7 +14,7 @@ export const getAllUsers = asyncHandler(async (req, res) => {
     );
 });
 
-// --- Get User by ID (Admin Only) ---
+
 export const getUserById = asyncHandler(async (req, res) => {
     const { userId } = req.params;
 
@@ -30,12 +30,12 @@ export const getUserById = asyncHandler(async (req, res) => {
     );
 });
 
-// --- Update User (Admin Only) ---
+
 export const updateUser = asyncHandler(async (req, res) => {
     const { userId } = req.params;
     const updateData = req.body;
 
-    // Prevent updating sensitive fields
+    
     delete updateData.password;
     delete updateData.refreshToken;
 
@@ -54,7 +54,7 @@ export const updateUser = asyncHandler(async (req, res) => {
     );
 });
 
-// --- Delete User (Admin Only) ---
+
 export const deleteUser = asyncHandler(async (req, res) => {
     const { userId } = req.params;
 

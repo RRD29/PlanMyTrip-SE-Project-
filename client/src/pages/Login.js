@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Button from '../components/common/Button';
-import authImage from '../assets/images/auth-background.jpg'; // Import auth image
+import authImage from '../assets/images/auth-background.jpg'; 
 
 const Login = () => {
   const [email, setEmail] = useState('');

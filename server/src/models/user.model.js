@@ -4,9 +4,9 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import config from '../config/index.js';
 
-// --- Sub-schemas ---
+
 const identityVerificationSchema = new Schema({
-  aadhaarCard: { type: String }, // File path or URL
+  aadhaarCard: { type: String }, 
   panCard: { type: String },
   passport: { type: String, required: false },
   drivingLicense: { type: String },
@@ -14,7 +14,7 @@ const identityVerificationSchema = new Schema({
   trainingCertificate: { type: String, required: false },
   policeVerification: { type: String },
   governmentIdNumber: { type: String },
-  governmentIdProof: { type: String }, // File path or URL
+  governmentIdProof: { type: String }, 
   aadhaarNumber: { type: String },
   panNumber: { type: String },
   passportNumber: { type: String },
@@ -46,7 +46,7 @@ const guideProfileSchema = new Schema({
   bio: { type: String },
   rating: { type: Number, default: 0 },
   reviewCount: { type: Number, default: 0 },
-  profilePhoto: { type: String }, // URL to uploaded profile photo
+  profilePhoto: { type: String }, 
 }, { _id: false });
 
 const travellerProfileSchema = new Schema({
@@ -63,10 +63,10 @@ const travellerProfileSchema = new Schema({
   preferredLanguages: [{ type: String }],
   foodPreference: { type: String, enum: ['Veg', 'Non-Veg', 'Vegan', 'Jain', 'Halal', 'Other'] },
   profileBio: { type: String },
-  profilePhoto: { type: String }, // URL to uploaded profile photo (optional)
+  profilePhoto: { type: String }, 
 }, { _id: false });
 
-// --- Main User Schema ---
+
 const userSchema = new Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true, index: true },
@@ -86,16 +86,16 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-// --- Password Hashing Middleware ---
+
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-// --- METHODS (Ensure these are attached correctly) ---
+
 userSchema.methods.isPasswordCorrect = async function (password) {
-  // 'this' refers to the Mongoose document instance
+  
   return await bcrypt.compare(password, this.password);
 };
 
@@ -122,5 +122,5 @@ userSchema.methods.createPasswordResetToken = function() {
     return resetToken;
 };
 
-// --- Export the Model ---
+
 export const User = mongoose.model('User', userSchema);

@@ -1,11 +1,11 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import useApi from '../../hooks/useApi'; // We'll use this to fetch stats
+import useApi from '../../hooks/useApi'; 
 import { PageLoader } from '../../components/common/Loaders';
 import Button from '../../components/common/Button';
 import { useNavigate, Link } from 'react-router-dom';
 
-// --- MOCK DATA ---
+
 const MOCK_STATS = {
   upcomingTrips: 1,
   pendingPayments: 0,
@@ -14,9 +14,9 @@ const MOCK_STATS = {
 const MOCK_UPCOMING_TRIPS = [
   { _id: 'b1', guide: 'Bob Johnson', date: '2025-11-02', destination: 'Paris City Tour' },
 ];
-// -----------------
 
-// Reusable Stat Card
+
+
 const StatCard = ({ title, value, loading }) => (
   <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
     <p className="text-sm font-medium text-gray-500">{title}</p>
@@ -32,7 +32,7 @@ const UserDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // const { data: stats, loading, error } = useApi('/users/dashboard-stats'); // Real API
+  
   const loading = false;
   const error = null;
   const stats = MOCK_STATS;
@@ -49,7 +49,7 @@ const UserDashboard = () => {
         </Button>
       </div>
       
-      {/* --- Stat Cards Grid --- */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Upcoming Trips"
@@ -68,7 +68,7 @@ const UserDashboard = () => {
         />
       </div>
 
-      {/* --- Upcoming Trips Section --- */}
+      {}
       <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Your Next Adventure

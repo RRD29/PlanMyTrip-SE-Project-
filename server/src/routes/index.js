@@ -9,7 +9,7 @@ import adminRouter from './admin.routes.js';
 
 const router = Router();
 
-// Define all API routes
+
 router.use('/auth', authRouter);
 router.use('/users', userRouter);
 router.use('/guides', guideRouter);

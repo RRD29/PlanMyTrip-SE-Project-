@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 
-// Load environment variables from .env file
+
 dotenv.config();
 
 const config = {
@@ -16,8 +16,8 @@ const config = {
   EMAIL_USER: process.env.EMAIL_USER,
   EMAIL_PASS: process.env.EMAIL_PASS,
   
-  // --- CORRECTED CLIENT_URL LOGIC ---
-  // It should prioritize CORS_ORIGIN, which holds the current frontend port (8001)
+  
+  
   CLIENT_URL: process.env.CORS_ORIGIN || process.env.CLIENT_URL || 'http://localhost:3000', 
 };
 

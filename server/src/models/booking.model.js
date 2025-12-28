@@ -17,7 +17,7 @@ const bookingSchema = new Schema(
       startDate: { type: Date, required: true },
       endDate: { type: Date, required: true },
       numberOfTravelers: { type: Number, default: 1 },
-      itinerary: [String], // Array of places or notes
+      itinerary: [String], 
     },
     totalAmount: {
       type: Number,
@@ -27,18 +27,18 @@ const bookingSchema = new Schema(
       type: String,
       required: true,
       enum: [
-        'Pending Payment', // Booking created, awaiting payment
-        'Paid/Escrowed', // User has paid, money held by admin
-        'In Progress', // Trip has started (based on date)
-        'OTP Verified', // Meetup confirmed by both parties
-        'Completed', // Payment released to guide
-        'Cancelled', // Booking cancelled
-        'Disputed', // User or guide raised an issue
+        'Pending Payment', 
+        'Paid/Escrowed', 
+        'In Progress', 
+        'OTP Verified', 
+        'Completed', 
+        'Cancelled', 
+        'Disputed', 
       ],
       default: 'Pending Payment',
     },
     
-    // --- Stripe & Escrow ---
+    
     paymentIntentId: {
       type: String,
       required: true,
@@ -46,24 +46,24 @@ const bookingSchema = new Schema(
       index: true,
     },
 
-    // --- OTP Verification System ---
+    
     otpUser: {
-      // The code the *user* must give to the *guide*
+      
       type: String,
       required: true,
     },
     otpGuide: {
-      // The code the *guide* must give to the *user*
+      
       type: String,
       required: true,
     },
     otpVerifiedUser: {
-      // True when user enters the guide's OTP
+      
       type: Boolean,
       default: false,
     },
     otpVerifiedGuide: {
-      // True when guide enters the user's OTP
+      
       type: Boolean,
       default: false,
     },

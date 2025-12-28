@@ -4,7 +4,7 @@ import { verifyJWT, authorizeRole } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// Only logged-in users can generate an itinerary
+
 router
   .route('/generate')
   .post(verifyJWT, authorizeRole('user'), generateItinerary);

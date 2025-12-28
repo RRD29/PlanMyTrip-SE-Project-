@@ -4,15 +4,15 @@ import { PageLoader } from '../../components/common/Loaders';
 import Button from '../../components/common/Button';
 import { useNavigate } from 'react-router-dom';
 
-// --- MOCK DATA ---
+
 const MOCK_BOOKINGS = [
   { _id: 'b101', guide: 'Bob Johnson', destination: 'Paris City Tour', date: '2025-11-02', status: 'Paid/Escrowed', amount: 250 },
   { _id: 'b102', guide: 'David Lee', destination: 'Rome Food Tour', date: '2025-10-15', status: 'Completed', amount: 400 },
   { _id: 'b103', guide: 'Frank White', destination: 'Tokyo Day Trip', date: '2025-09-01', status: 'Completed', amount: 320 },
 ];
-// -----------------
 
-// Helper to get color for status badge
+
+
 const getStatusColor = (status) => {
   switch (status) {
     case 'Pending Payment':
@@ -28,7 +28,7 @@ const getStatusColor = (status) => {
   }
 };
 
-// --- Single Booking Card (NAVIGATE IS CORRECT HERE) ---
+
 const BookingCard = ({ booking }) => {
   const navigate = useNavigate();
 
@@ -61,7 +61,7 @@ const BookingCard = ({ booking }) => {
             </Button>
           )}
           {booking.status === 'Completed' && (
-            <Button variant="secondary" onClick={() => {/* Open Review Modal */}}>
+            <Button variant="secondary" onClick={() => {}}>
               Leave a Review
             </Button>
           )}
@@ -73,17 +73,17 @@ const BookingCard = ({ booking }) => {
 
 
 const MyBookings = () => {
-  // ADD THIS LINE HERE:
+  
   const navigate = useNavigate(); 
   
-  // const { myBookings, loading, error, fetchMyBookings } = useBooking();
   
-  // // Fetch bookings on component mount
-  // useEffect(() => {
-  //   fetchMyBookings();
-  // }, [fetchMyBookings]);
   
-  // Mock data for now
+  
+  
+  
+  
+  
+  
   const loading = false;
   const error = null;
   const myBookings = MOCK_BOOKINGS;
@@ -110,7 +110,7 @@ const MyBookings = () => {
         <div className="text-center py-10 px-6 bg-white rounded-lg shadow border">
           <h4 className="text-lg font-medium text-gray-700">No Bookings Found</h4>
           <p className="text-gray-500 mt-1">You haven't booked any trips yet.</p>
-          {/* NAVIGATE IS NOW CORRECTLY DEFINED HERE */}
+          {}
           <Button size="lg" className="mt-6" onClick={() => navigate('/dashboard/trip-planner')}>
             Plan Your First Trip
           </Button>

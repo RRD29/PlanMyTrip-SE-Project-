@@ -1,10 +1,6 @@
 import api from '../lib/axios';
 
-/**
- * Creates a new booking and payment intent.
- * @param {object} bookingData - { guideId, startDate, endDate, totalAmount, ... }
- * @returns {Promise<object>} The response data (e.g., { booking, clientSecret })
- */
+
 const createBooking = async (bookingData) => {
   try {
     const response = await api.post('/bookings/create', bookingData);
@@ -14,10 +10,7 @@ const createBooking = async (bookingData) => {
   }
 };
 
-/**
- * Fetches all bookings for the currently logged-in user.
- * @returns {Promise<Array>} The array of booking objects
- */
+
 const getMyBookings = async () => {
   try {
     const response = await api.get('/bookings/my-bookings');
@@ -27,12 +20,7 @@ const getMyBookings = async () => {
   }
 };
 
-/**
- * Verifies the OTP for a specific booking.
- * @param {string} bookingId
- * @param {string} otp
- * @returns {Promise<object>} The updated booking object
- */
+
 const verifyOtp = async (bookingId, otp) => {
   try {
     const response = await api.post(`/bookings/verify-otp/${bookingId}`, { otp });

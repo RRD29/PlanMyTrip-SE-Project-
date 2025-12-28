@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '../components/common/Button';
-import { authService } from '../services/auth.service.js'; // Import the service
+import { authService } from '../services/auth.service.js'; 
 import authImage from '../assets/images/auth-background.jpg';
 
 const ForgotPassword = () => {
@@ -45,7 +45,7 @@ const ForgotPassword = () => {
           {error && <p className="text-red-600 bg-red-100 p-3 rounded-md text-center">{error}</p>}
           {message && <p className="text-green-600 bg-green-100 p-3 rounded-md text-center">{message}</p>}
 
-          {!message && ( // Hide form after success message
+          {!message && ( 
             <>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">

@@ -1,15 +1,10 @@
 import { ApiError } from "../utils/ApiError.js";
 
-/**
- * Generates a trip itinerary.
- * (This is a mock service. In a real app, this would call an AI API.)
- * @param {object} details - { destination, days, budget, interests }
- * @returns {Promise<object>} A generated itinerary object.
- */
+
 export const generateItineraryService = async (details) => {
   const { destination, days, interests } = details;
 
-  // Simulate an AI call
+  
   await new Promise(resolve => setTimeout(resolve, 500));
 
   if (destination.toLowerCase().includes("fail")) {

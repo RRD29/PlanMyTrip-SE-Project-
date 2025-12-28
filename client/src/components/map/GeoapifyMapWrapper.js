@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix Leaflet default icon issue in React
+
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -12,11 +12,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-// Geoapify tiles URL
+
 const GEOAPIFY_API_KEY = process.env.REACT_APP_GEOAPIFY_API_KEY;
 const TILE_URL = `https://maps.geoapify.com/v1/tile/osm-carto/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_API_KEY}`;
 
-// Component to control map center updates
+
 const MapController = ({ center, zoom }) => {
   const map = useMap();
 
@@ -30,7 +30,7 @@ const MapController = ({ center, zoom }) => {
 };
 
 const GeoapifyMapWrapper = ({ center, zoom = 13, markers = [], route = [] }) => {
-  const defaultCenter = [39.8283, -98.5795]; // Fallback center (USA)
+  const defaultCenter = [39.8283, -98.5795]; 
   const mapCenter = center && center.length === 2 ? center : defaultCenter;
 
   const displayMap = useMemo(
@@ -48,14 +48,14 @@ const GeoapifyMapWrapper = ({ center, zoom = 13, markers = [], route = [] }) => 
           url={TILE_URL}
         />
 
-        {/* Show markers */}
+        {}
         {markers.map((marker, index) => (
           <Marker key={index} position={[marker.lat, marker.lng]}>
             {marker.info && <Popup>{marker.info}</Popup>}
           </Marker>
         ))}
 
-        {/* ✅ Draw route if exist */}
+        {}
         {route.length > 0 && (
           <Polyline
             positions={route.map(coord => [coord.lat, coord.lng])}

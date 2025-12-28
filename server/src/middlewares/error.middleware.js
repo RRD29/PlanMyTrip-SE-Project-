@@ -1,11 +1,8 @@
 import { ApiError } from "../utils/ApiError.js";
 
-/**
- * Global error handling middleware.
- * This should be the last middleware added in your app.js.
- */
+
 export const errorHandler = (err, req, res, next) => {
-  // Check if the error is an instance of our custom ApiError
+  
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({
       statusCode: err.statusCode,
@@ -15,8 +12,8 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Handle other unexpected or unhandled errors
-  console.error("UNHANDLED ERROR:", err.stack); // Log the full error stack for debugging
+  
+  console.error("UNHANDLED ERROR:", err.stack); 
 
   return res.status(500).json({
     statusCode: 500,

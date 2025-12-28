@@ -6,7 +6,7 @@ import {
 
 const router = Router();
 
-// These are public routes, no auth needed
+
 router.route('/').get(getAllGuides);
 router.route('/:guideId').get(getGuideById);
 

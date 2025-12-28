@@ -16,7 +16,7 @@ const NotFound = () => {
       </p>
       
       <Button size="lg" className="mt-8">
-        {/* The Link component will be styled as a button */}
+        {}
         <Link to="/">
           Go back home
         </Link>

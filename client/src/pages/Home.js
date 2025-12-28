@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../components/common/Button';
 import heroImage from '../assets/images/hero-background.jpg';
 
-// --- Icons ---
+
 const MapPinIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -27,7 +27,7 @@ const StarIcon = (props) => (
   </svg>
 );
 
-// --- Animation variants ---
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -106,27 +106,27 @@ const Home = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentReviewIndex((prevIndex) => (prevIndex + 1) % reviews.length);
-    }, 5000); // Rotate every 5 seconds
+    }, 5000); 
     return () => clearInterval(interval);
   }, [reviews.length]);
 
   useEffect(() => {
     const bgInterval = setInterval(() => {
       setCurrentBgIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
-    }, 4000); // Rotate background every 4 seconds
+    }, 4000); 
     return () => clearInterval(bgInterval);
   }, [backgroundImages.length]);
 
   return (
     <div className="bg-white">
-      {/* --- Hero Section --- */}
+      {}
       <motion.div
         className="relative h-[70vh] min-h-[500px] text-white"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
       >
-        {/* Background Image */}
+        {}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentBgIndex}
@@ -138,10 +138,10 @@ const Home = () => {
             style={{ backgroundImage: `url(${backgroundImages[currentBgIndex]})` }}
           />
         </AnimatePresence>
-        {/* Overlay */}
+        {}
         <div className="absolute inset-0 bg-black/60" />
 
-        {/* Content */}
+        {}
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center p-4">
           <motion.h1
             className="text-4xl md:text-6xl font-bold leading-tight"
@@ -175,7 +175,7 @@ const Home = () => {
         </div>
       </motion.div>
 
-      {/* --- How It Works Section --- */}
+      {}
       <motion.section
         className="py-20 bg-blue-50"
         variants={containerVariants}
@@ -245,7 +245,7 @@ const Home = () => {
         </div>
       </motion.section>
 
-      {/* --- Reviews by Users Section --- */}
+      {}
       <section className="py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.h2
@@ -292,7 +292,7 @@ const Home = () => {
             </AnimatePresence>
           </div>
 
-          {/* Dots indicator */}
+          {}
           <div className="flex justify-center mt-8 space-x-2">
             {reviews.map((_, index) => (
               <button
@@ -307,7 +307,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* --- Call to Action Section --- */}
+      {}
       <motion.section
         className="py-20 bg-blue-600 text-white"
         initial={{ opacity: 0 }}

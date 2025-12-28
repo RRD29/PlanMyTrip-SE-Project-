@@ -16,7 +16,7 @@ const reviewSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Booking',
       required: true,
-      unique: true, // A user can only leave one review per booking
+      unique: true, 
     },
     rating: {
       type: Number,
@@ -33,8 +33,8 @@ const reviewSchema = new Schema(
   { timestamps: true }
 );
 
-// --- Add a hook to recalculate a guide's average rating after a review is saved ---
-// This is advanced, but very important for a good system
+
+
 reviewSchema.statics.calculateAverageRating = async function(guideId) {
   const stats = await this.aggregate([
     {
@@ -63,7 +63,7 @@ reviewSchema.statics.calculateAverageRating = async function(guideId) {
   }
 };
 
-// Call the calculator after a review is saved or removed
+
 reviewSchema.post('save', function() {
   this.constructor.calculateAverageRating(this.guide);
 });

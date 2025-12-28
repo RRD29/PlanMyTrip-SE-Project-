@@ -1,22 +1,22 @@
 import React from 'react';
 import { NavLink, Outlet, Navigate, Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext'; // Corrected import path
+import { useAuth } from '../../contexts/AuthContext'; 
 import {
   UserIcon,
   CalendarIcon,
   MapPinIcon,
   HomeIcon,
-  // CurrencyDollarIcon - Can be used if you want a dedicated Earnings link
+  
 } from '../../assets/icons';
 
-// --- Helper Icon Components ---
+
 const SidebarIcon = ({ icon: IconComponent, colorClass }) => (
   <IconComponent className={`h-6 w-6 mr-3 ${colorClass} group-hover:text-white`} />
 );
 
-// --- Navigation Definitions ---
 
-// User Navigation (Standard Blue Theme)
+
+
 const UserNav = () => (
   <>
     <DashboardNavLink to="/" icon={HomeIcon} color="blue">Home</DashboardNavLink>
@@ -25,20 +25,20 @@ const UserNav = () => (
     <DashboardNavLink to="/dashboard/trip-planner" icon={MapPinIcon} color="blue">Trip Planner</DashboardNavLink>
     <DashboardNavLink to="/dashboard/make-a-trip" icon={MapPinIcon} color="blue">Make a Trip</DashboardNavLink>
     <DashboardNavLink to="/dashboard/explore-places" icon={MapPinIcon} color="blue">Explore Places</DashboardNavLink>
-    {/* Users see "Find Guides" */}
+    {}
     <DashboardNavLink to="/guides" icon={MapPinIcon} color="blue">Find Guides</DashboardNavLink>
   </>
 );
 
-// Guide Navigation (Earning/Service Focused - Green Theme)
+
 const GuideNav = () => (
   <>
     <DashboardNavLink to="/" icon={HomeIcon} color="green">Home</DashboardNavLink>
     <DashboardNavLink to="/dashboard-guide" icon={UserIcon} color="green">My Earnings</DashboardNavLink>
     <DashboardNavLink to="/dashboard-guide/booking-requests" icon={CalendarIcon} color="green">Booking Requests</DashboardNavLink>
     <DashboardNavLink to="/dashboard-guide/my-availability" icon={MapPinIcon} color="green">Availability</DashboardNavLink>
-    {/* --- REMOVED: Find Guides option for the guide --- */}
-    {/* <DashboardNavLink to="/guides" icon={MapPinIcon} color="green">Find Guides</DashboardNavLink> */}
+    {}
+    {}
   </>
 );
 
@@ -51,27 +51,27 @@ const AdminNav = () => (
   </>
 );
 
-// --- Reusable NavLink Component for the Sidebar ---
+
 const DashboardNavLink = ({ to, children, icon, color }) => {
   const baseClasses = 'flex items-center px-4 py-3 rounded-lg text-sm font-medium group';
 
-  // Define theme colors based on the 'color' prop (derived from role)
+  
   const roleColor = {
-    blue: { // User theme
+    blue: { 
       sidebarBg: 'bg-blue-600',
       sidebarHoverBg: 'hover:bg-blue-700',
-      text: 'text-blue-100', // Lighter text for inactive
-      icon: 'text-blue-300', // Slightly different icon color
-      activeText: 'text-white' // Active link text
+      text: 'text-blue-100', 
+      icon: 'text-blue-300', 
+      activeText: 'text-white' 
     },
-    green: { // Guide theme
+    green: { 
       sidebarBg: 'bg-green-600',
       sidebarHoverBg: 'hover:bg-green-700',
       text: 'text-green-100',
       icon: 'text-green-300',
       activeText: 'text-white'
     },
-    red: { // Admin theme
+    red: { 
         sidebarBg: 'bg-red-600',
         sidebarHoverBg: 'hover:bg-red-700',
         text: 'text-red-100',
@@ -84,7 +84,7 @@ const DashboardNavLink = ({ to, children, icon, color }) => {
     `${baseClasses} ${
       isActive
         ? `${roleColor.sidebarBg} ${roleColor.activeText}` // Active state
-        : `${roleColor.text} ${roleColor.sidebarHoverBg} hover:text-white` // Inactive state
+        : `${roleColor.text} ${roleColor.sidebarHoverBg} hover:text-white` 
     }`;
 
   // Determine icon color based on active state
@@ -181,7 +181,7 @@ const DashboardLayout = () => {
                 <p className="text-sm font-medium text-white">{user.fullName}</p>
                 <Link
                   to={user.role === 'guide' ? '/dashboard-guide/profile'
-                      : user.role === 'admin' ? '/dashboard-admin/settings' // Example for admin
+                      : user.role === 'admin' ? '/dashboard-admin/settings' 
                       : '/dashboard/profile'}
                   className="text-xs font-medium text-gray-400 hover:text-gray-200"
                 >
@@ -193,12 +193,12 @@ const DashboardLayout = () => {
         </div>
       </aside>
 
-      {/* --- Main Content Area --- */}
+      {}
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <main className="flex-1 relative overflow-y-auto focus:outline-none">
           <div className="py-6">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-              {/* The Outlet renders the specific dashboard page */}
+              {}
               <Outlet />
             </div>
           </div>

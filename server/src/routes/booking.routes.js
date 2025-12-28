@@ -8,11 +8,11 @@ import { verifyJWT, authorizeRole } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// All booking routes are protected
+
 router.use(verifyJWT);
 
 router.route('/create').post(authorizeRole('user'), createBooking);
-router.route('/my-bookings').get(getMyBookings); // Controller handles user/guide logic
+router.route('/my-bookings').get(getMyBookings); 
 router
   .route('/verify-otp/:bookingId')
   .post(authorizeRole('user', 'guide'), verifyOtp);

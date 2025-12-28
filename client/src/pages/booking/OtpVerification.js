@@ -4,10 +4,10 @@ import { useBooking } from '../../contexts/BookingContext';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../../components/common/Button';
 
-// A simple 6-digit OTP input
+
 const OtpInput = ({ value, onChange, length = 6 }) => {
   const handleChange = (e) => {
-    // Only allow numbers and limit length
+    
     const val = e.target.value.replace(/\D/g, '').slice(0, length);
     onChange(val);
   };
@@ -49,11 +49,11 @@ const OtpVerification = () => {
       const response = await verifyBookingOtp(bookingId, otp);
       
       if (response.status === 'Completed') {
-        // Both parties have verified!
+        
         setMessage('Success! Payment has been released to the guide.');
         setTimeout(() => navigate('/dashboard/my-bookings'), 3000);
       } else if (response.status === 'OTP Verified') {
-        // This user/guide verified, waiting on the other.
+        
         setMessage('OTP Verified! Waiting for the other party to confirm.');
         setTimeout(() => navigate('/dashboard/my-bookings'), 3000);
       }

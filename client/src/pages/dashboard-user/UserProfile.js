@@ -5,31 +5,31 @@ import { PageLoader } from '../../components/common/Loaders';
 import { userService } from '../../services/user.service';
 import { useNavigate } from 'react-router-dom';
 
-// Helper for input styling
+
 const inputStyle = "px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500";
 
-// =========================================================================
-// --- DUMB COMPONENTS (Used to organize the massive form fields) ---
-// =========================================================================
+
+
+
 
 const TravellerFields = (props) => (
     <>
         <h2 className="text-xl font-semibold border-t pt-4 mt-4">Traveller Profile</h2>
         
-        {/* Phone Number */}
+        {}
         <div>
             <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
             <input type="tel" id="phoneNumber" value={props.phoneNumber} onChange={(e) => props.setPhoneNumber(e.target.value)} className={`mt-1 block w-full ${inputStyle}`}/>
-            {/* You can add OTP logic for travellers here too if needed */}
+            {}
         </div>
         
-        {/* Gender & DOB */}
+        {}
         <div className="grid grid-cols-2 gap-4">
           <div><label htmlFor="travellerGender" className="block text-sm font-medium text-gray-700">Gender</label><select id="travellerGender" value={props.travellerGender} onChange={(e) => props.setTravellerGender(e.target.value)} className={`mt-1 block w-full ${inputStyle}`}><option value="">Select...</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
           <div><label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">Date of Birth</label><input type="date" id="dateOfBirth" value={props.dateOfBirth} onChange={(e) => props.setDateOfBirth(e.target.value)} className={`mt-1 block w-full ${inputStyle}`}/></div>
         </div>
         
-        {/* Address */}
+        {}
         <div className="grid grid-cols-2 gap-4">
           <div><label htmlFor="city" className="block text-sm font-medium text-gray-700">City</label><input type="text" id="city" value={props.address.city} onChange={(e) => props.setAddress({ ...props.address, city: e.target.value })} className={`mt-1 block w-full ${inputStyle}`}/></div>
           <div><label htmlFor="state" className="block text-sm font-medium text-gray-700">State</label><input type="text" id="state" value={props.address.state} onChange={(e) => props.setAddress({ ...props.address, state: e.target.value })} className={`mt-1 block w-full ${inputStyle}`}/></div>
@@ -39,7 +39,7 @@ const TravellerFields = (props) => (
 
         <h3 className="text-lg font-medium pt-4 border-t">Preferences & Bio</h3>
         
-        {/* Preferred Travel Style */}
+        {}
         <div><label htmlFor="preferredTravelStyle" className="block text-sm font-medium text-gray-700">Preferred Travel Style</label>
         <select multiple id="preferredTravelStyle" value={props.preferredTravelStyle} onChange={(e) => props.setPreferredTravelStyle(Array.from(e.target.selectedOptions, option => option.value))} className={`mt-1 block w-full ${inputStyle} h-24`}>
             <option value="Adventure">Adventure</option>
@@ -50,7 +50,7 @@ const TravellerFields = (props) => (
             <option value="Budget">Budget</option>
         </select></div>
         
-        {/* Languages, Food, Bio */}
+        {}
         <div className="grid grid-cols-2 gap-4">
             <div><label htmlFor="preferredLanguages" className="block text-sm font-medium text-gray-700">Preferred Languages</label><input type="text" id="preferredLanguages" value={props.preferredLanguages} onChange={(e) => props.setPreferredLanguages(e.target.value)} placeholder="e.g., English, Hindi" className={`mt-1 block w-full ${inputStyle}`}/></div>
             <div><label htmlFor="foodPreference" className="block text-sm font-medium text-gray-700">Food Preference</label><select id="foodPreference" value={props.foodPreference} onChange={(e) => props.setFoodPreference(e.target.value)} className={`mt-1 block w-full ${inputStyle}`}><option value="">Select...</option><option value="Veg">Veg</option><option value="Non-Veg">Non-Veg</option></select></div>
@@ -117,7 +117,7 @@ const GuidePrivateFields = (props) => (
           <div><label htmlFor="policeVerificationNumber" className="block text-sm font-medium text-gray-700">Police Verification No. *</label><input type="text" id="policeVerificationNumber" value={props.policeVerificationNumber} onChange={(e) => props.setPoliceVerificationNumber(e.target.value)} className={`mt-1 block w-full ${props.inputStyle}`} required={!props.isProfileComplete}/></div>
         </div>
 
-        {/* --- THIS IS THE UPDATED FILE UPLOAD SECTION --- */}
+        {}
         <div className="grid grid-cols-2 gap-4 mt-4">
             
             <FileUploadField
@@ -161,22 +161,22 @@ const GuidePrivateFields = (props) => (
     </>
 );
 
-// --- Reusable File Input Component ---
+
 const FileUploadField = ({ label, name, fileUrl, newFile, onChange }) => (
     <div>
         <label htmlFor={name} className="block text-sm font-medium text-gray-700">{label}</label>
-        {/* If a URL exists and no new file is being staged, show the "View" link */}
+        {}
         {fileUrl && !newFile ? (
             <div className="mt-1">
                 <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-green-600 hover:text-green-800">
                     ✓ View Uploaded Document
                 </a>
-                {/* "Change" button that clicks the hidden input */}
+                {}
                 <label htmlFor={name} className="cursor-pointer text-sm text-blue-500 hover:underline ml-3">Change</label>
                 <input type="file" id={name} name={name} onChange={onChange} className="sr-only"/>
             </div>
         ) : (
-            // Otherwise, show the file input
+            
             <>
                 <input type="file" id={name} name={name} onChange={onChange} className="mt-1 text-sm"/>
                 {newFile && <p className="text-xs text-blue-600 mt-1">New: {newFile.name} (Ready to upload)</p>}
@@ -186,17 +186,17 @@ const FileUploadField = ({ label, name, fileUrl, newFile, onChange }) => (
 );
 
 
-// =========================================================================
-// --- MAIN USER PROFILE COMPONENT ---
-// =========================================================================
+
+
+
 
 const UserProfile = () => {
   const { user: authUser, loading: authLoading, setUser: setAuthUser } = useAuth();
   const [currentUser, setCurrentUser] = useState(authUser);
   const navigate = useNavigate();
 
-  // --- STATE ---
-  // Basic
+  
+  
   const [fullName, setFullName] = useState('');
   // Traveller fields
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -272,7 +272,7 @@ const UserProfile = () => {
     }
   };
 
-  // Helper to parse comma-separated strings
+  
   const parseArrayString = (arr) => Array.isArray(arr) ? arr.join(', ') : (arr || '');
 
   // --- Fetch Profile On Load ---
@@ -379,10 +379,10 @@ const UserProfile = () => {
     // Helper to append text fields
     const appendIfPresent = (key, value) => {
         if (value !== null && value !== undefined && value !== '') {
-            if (key === 'preferredTravelStyle') { // Handle multi-select
+            if (key === 'preferredTravelStyle') { 
                 value.forEach(v => formData.append(`${key}[]`, v));
             } else if (typeof value === 'object' && value.city !== undefined) {
-                 // Handle address object
+                 
                  formData.append('address[city]', value.city || '');
                  formData.append('address[state]', value.state || '');
                  formData.append('address[country]', value.country || '');
@@ -408,7 +408,7 @@ const UserProfile = () => {
     } 
     
     if (currentUser.role === 'guide') {
-        // Public Guide Info
+        
         appendIfPresent('dob', dob);
         appendIfPresent('gender', gender);
         appendIfPresent('contactNumber', contactNumber);
@@ -421,7 +421,7 @@ const UserProfile = () => {
         appendIfPresent('pricePerDay', pricePerDay);
         appendIfPresent('bio', bio);
         
-        // Private Verification/Payment Text
+        
         appendIfPresent('aadhaarNumber', aadhaarNumber);
         appendIfPresent('panNumber', panNumber);
         appendIfPresent('tourismLicenseNumber', tourismLicenseNumber);
@@ -432,14 +432,14 @@ const UserProfile = () => {
         appendIfPresent('upiId', upiId);
     }
 
-    // --- Append ALL file fields (if they exist) ---
+    
     if (avatarFile) formData.append('avatar', avatarFile);
     if (aadhaarCardFile) formData.append('aadhaarCard', aadhaarCardFile);
     if (panCardFile) formData.append('panCard', panCardFile);
     if (tourismLicenseFile) formData.append('tourismLicense', tourismLicenseFile);
     if (policeVerificationFile) formData.append('policeVerification', policeVerificationFile);
 
-    // --- Validation (Basic client-side check) ---
+    
     if (currentUser.role === 'guide' && !currentUser.isProfileComplete) {
         if (!baseLocation || !pricePerDay || !aadhaarNumber || !bankAccountName) { 
              setMessage('Please fill in all required fields (*) and try again.');
@@ -447,15 +447,15 @@ const UserProfile = () => {
              return;
         }
     }
-    // -----------------------------------------------------
+    
 
     try {
       const updatedUser = await userService.updateMyProfile(formData);
       setCurrentUser(updatedUser);
-      setAuthUser(updatedUser); // Update global state
+      setAuthUser(updatedUser); 
       setMessage('Profile updated successfully!');
       
-      // --- UPDATE URLS AFTER SAVE ---
+      
       if (updatedUser.identityVerification) {
           setAadhaarCardUrl(updatedUser.identityVerification.aadhaarCard || '');
           setPanCardUrl(updatedUser.identityVerification.panCard || '');
@@ -501,11 +501,11 @@ const UserProfile = () => {
         </div>
       )}
 
-      {/* The form submission is now a single, unified call */}
+      {}
       <form onSubmit={handleProfileSubmit} className="bg-white p-6 rounded-lg shadow border border-gray-200 max-w-4xl space-y-6">
         {message && <p className={`p-3 rounded-md ${message.includes('successfully') ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'}`}>{message}</p>}
 
-        {/* --- SECTION 1: BASIC INFO & AVATAR --- */}
+        {}
         <h2 className="text-xl font-semibold border-b pb-2">Basic Information & Photo</h2>
         
         <div className="flex items-center space-x-4">
@@ -528,7 +528,7 @@ const UserProfile = () => {
             </div>
         </div>
 
-        {/* --- SECTION 2: TRAVELLER PROFILE --- */}
+        {}
         {user.role === 'user' && (
           <TravellerFields
             phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber}
@@ -540,13 +540,13 @@ const UserProfile = () => {
             foodPreference={foodPreference} setFoodPreference={setFoodPreference}
             profileBio={profileBio} setProfileBio={setProfileBio}
             inputStyle={inputStyle}
-            // Pass OTP props
+            
             handleSendOTP={handleSendOTP} otpSent={otpSent} otpVerified={otpVerified}
             otp={otp} setOtp={setOtp} handleVerifyOTP={handleVerifyOTP}
           />
         )}
 
-        {/* --- SECTION 3: GUIDE PROFILE (PUBLIC) --- */}
+        {}
         {user.role === 'guide' && (
           <GuidePublicFields
             dob={dob} setDob={setDob}
@@ -567,7 +567,7 @@ const UserProfile = () => {
           />
         )}
 
-        {/* --- SECTION 4: GUIDE VERIFICATION (PRIVATE) --- */}
+        {}
         {user.role === 'guide' && (
           <GuidePrivateFields
             aadhaarNumber={aadhaarNumber} setAadhaarNumber={setAadhaarNumber}
@@ -578,13 +578,13 @@ const UserProfile = () => {
             bankAccountNumber={bankAccountNumber} setBankAccountNumber={setBankAccountNumber}
             bankIFSC={bankIFSC} setBankIFSC={setBankIFSC}
             upiId={upiId} setUpiId={setUpiId}
-            // Pass file states and handler
+            
             handleFileChange={handleFileChange}
             aadhaarCardFile={aadhaarCardFile}
             panCardFile={panCardFile}
             tourismLicenseFile={tourismLicenseFile}
             policeVerificationFile={policeVerificationFile}
-            // Pass URLs for display
+            
             aadhaarCardUrl={aadhaarCardUrl} 
             panCardUrl={panCardUrl}
             tourismLicenseUrl={tourismLicenseUrl} 

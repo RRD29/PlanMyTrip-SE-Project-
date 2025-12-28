@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Button from '../common/Button';
 
-// --- Star Icons (defined inline for simplicity) ---
+
 const StarIconFilled = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -33,14 +33,9 @@ const StarIconOutline = (props) => (
     />
   </svg>
 );
-// --- End Star Icons ---
 
-/**
- * A form for submitting a review with a star rating.
- * @param {object} props
- * @param {(rating: number, text: string) => void} props.onSubmit - Function to call on submit
- * @param {boolean} [props.submitting=false] - Disables the form while submitting
- */
+
+
 const ReviewForm = ({ onSubmit, submitting = false }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);

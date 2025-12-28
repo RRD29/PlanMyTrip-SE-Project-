@@ -3,21 +3,21 @@ import useApi from '../../hooks/useApi';
 import { PageLoader, SkeletonText } from '../../components/common/Loaders';
 import Button from '../../components/common/Button';
 
-// --- MOCK DATA ---
+
 const MOCK_BOOKINGS = [
   { _id: 'b1', user: 'Alice Smith', date: '2025-11-02', destination: 'Paris City Tour', status: 'Confirmed' },
   { _id: 'b2', user: 'Charlie Brown', date: '2025-11-05', destination: 'Louvre Museum Visit', status: 'Confirmed' },
   { _id: 'b3', user: 'Eve Davis', date: '2025-11-10', destination: 'Eiffel Tower Climb', status: 'Pending Payment' },
   { _id: 'b4', user: 'Grace Hall', date: '2025-11-12', destination: 'Food Tour', status: 'Pending Payment' },
 ];
-// -----------------
 
-// Helper to get color for status badge
+
+
 const getStatusColor = (status) => {
   switch (status) {
     case 'Pending Payment':
       return 'bg-yellow-100 text-yellow-800';
-    case 'Confirmed': // This means Paid/Escrowed
+    case 'Confirmed': 
       return 'bg-blue-100 text-blue-800';
     case 'Completed':
       return 'bg-green-100 text-green-800';
@@ -29,22 +29,22 @@ const getStatusColor = (status) => {
 };
 
 const BookingRequests = () => {
-  // const { data: bookings, loading, error } = useApi('/guides/my-bookings'); // Real API
+  
   const [bookings, setBookings] = useState(MOCK_BOOKINGS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleApprove = (bookingId) => {
-    // In a real app, this might just be a chat link
-    // or if you have a "request" system before payment.
+    
+    
     console.log(`Approving ${bookingId}`);
   };
 
   const handleCancel = (bookingId) => {
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       console.log(`Cancelling ${bookingId}`);
-      // await api.post(`/bookings/cancel/${bookingId}`);
-      // setBookings(bookings.filter(b => b._id !== bookingId));
+      
+      
     }
   };
 

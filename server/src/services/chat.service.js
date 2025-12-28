@@ -6,9 +6,7 @@ import config from '../config/index.js';
 
 let ioInstance;
 
-/**
- * Saves a message to the database.
- */
+
 const saveMessage = async (data) => {
   try {
     const chatMessage = await ChatMessage.create({
@@ -16,7 +14,7 @@ const saveMessage = async (data) => {
       sender: data.senderId,
       text: data.text,
     });
-    // Populate sender info for the frontend
+    
     await chatMessage.populate('sender', 'fullName avatar'); 
     return chatMessage;
   } catch (error) {
@@ -25,10 +23,7 @@ const saveMessage = async (data) => {
   }
 };
 
-/**
- * Authenticates a socket connection using the JWT from the handshake query.
- * This ensures only authenticated users can connect to the chat server.
- */
+
 const authenticateSocket = (socket, next) => {
   const token = socket.handshake.auth.token;
 
@@ -38,40 +33,37 @@ const authenticateSocket = (socket, next) => {
 
   try {
     const decodedToken = jwt.verify(token, config.JWT_SECRET);
-    socket.user = decodedToken; // Attach user info to the socket
+    socket.user = decodedToken; 
     next();
   } catch (err) {
     return next(new Error("Authentication failed: Invalid token."));
   }
 };
 
-/**
- * Initializes all Socket.io event listeners.
- * @param {SocketIOServer} io - The Socket.io server instance.
- */
+
 export const initSocketListeners = (io) => {
   ioInstance = io;
   
-  // Apply authentication middleware to all incoming connections
+  
   io.use(authenticateSocket);
 
   io.on('connection', (socket) => {
-    const user = socket.user; // User object from middleware
+    const user = socket.user; 
 
     console.log(`[SOCKET] User connected: ${user.fullName} (${user._id})`);
 
-    // --- 1. JOIN ROOM (Booking) ---
+    
     socket.on('joinRoom', async (bookingId) => {
-      // The room name is the booking ID
+      
       socket.join(bookingId);
       console.log(`[SOCKET] ${user.fullName} joined room: ${bookingId}`);
 
-      // Optional: Fetch and send history (we will implement this in the REST endpoint)
+      
     });
 
-    // --- 2. SEND MESSAGE ---
+    
     socket.on('sendMessage', async (data) => {
-      // data: { bookingId: string, text: string }
+      
       
       const messageData = {
         bookingId: data.bookingId,
@@ -79,16 +71,16 @@ export const initSocketListeners = (io) => {
         text: data.text,
       };
       
-      // Save message to DB
+      
       const savedMessage = await saveMessage(messageData);
 
       if (savedMessage) {
-        // Emit the message to all users currently in that room (booking)
+        
         io.to(data.bookingId).emit('receiveMessage', savedMessage);
       }
     });
 
-    // --- 3. DISCONNECT ---
+    
     socket.on('disconnect', () => {
       console.log(`[SOCKET] User disconnected: ${user.fullName}`);
     });
@@ -96,13 +88,11 @@ export const initSocketListeners = (io) => {
 };
 
 
-/**
- * REST Endpoint for fetching chat history (used on load).
- */
+
 export const fetchChatHistory = async (bookingId) => {
-  // Fetch the last 50 messages, ordered by newest first
+  
   const messages = await ChatMessage.find({ booking: bookingId })
-    .populate('sender', 'fullName avatar') // Get sender details
+    .populate('sender', 'fullName avatar') 
     .sort({ createdAt: 1 })
     .limit(50);
   

@@ -3,7 +3,7 @@ import useApi from '../../hooks/useApi';
 import { PageLoader, SkeletonText } from '../../components/common/Loaders';
 import Button from '../../components/common/Button';
 
-// Skeleton row for loading state
+
 const UserRowSkeleton = () => (
   <tr className="animate-pulse">
     <td className="px-6 py-4 whitespace-nowrap"><SkeletonText className="h-5 w-3/4" /></td>
@@ -16,11 +16,11 @@ const UserRowSkeleton = () => (
 );
 
 const ManageUsers = () => {
-  const { data: users, loading, error } = useApi('/admin/users'); // Real API call
+  const { data: users, loading, error } = useApi('/admin/users'); 
 
   const handleSuspendUser = (userId) => {
     if (window.confirm('Are you sure you want to suspend this user?')) {
-      // API call to suspend user
+      
       console.log(`Suspending user ${userId}`);
     }
   };
@@ -29,7 +29,7 @@ const ManageUsers = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-gray-900">Manage Users</h1>
 
-      {/* TODO: Add Search/Filter Bar */}
+      {}
 
       <div className="bg-white shadow border border-gray-200 rounded-lg overflow-hidden">
         {error && <p className="text-red-500 p-4">Error fetching users: {error}</p>}

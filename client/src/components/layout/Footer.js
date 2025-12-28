@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           
-          {/* --- Company Section --- */}
+          {}
           <div>
             <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-300">
               Company
@@ -19,7 +19,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* --- Resources Section --- */}
+          {}
           <div>
             <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-300">
               Resources
@@ -31,7 +31,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* --- Legal Section --- */}
+          {}
           <div>
             <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-300">
               Legal
@@ -43,7 +43,7 @@ const Footer = () => {
             </ul>
           </div>
           
-          {/* --- Brand Section --- */}
+          {}
           <div className="col-span-2 md:col-span-1">
              <Link to="/" className="text-white text-2xl font-bold">
               PlanMyTrip ✈️
@@ -55,7 +55,7 @@ const Footer = () => {
 
         </div>
 
-        {/* --- Copyright Bottom Bar --- */}
+        {}
         <div className="mt-12 border-t border-gray-800 pt-8">
           <p className="text-base text-center">
             &copy; {new Date().getFullYear()} PlanMyTrip, Inc. All rights reserved.

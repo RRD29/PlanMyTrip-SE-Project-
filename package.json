@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "strip-comments": "^2.0.1"
   }
 }
