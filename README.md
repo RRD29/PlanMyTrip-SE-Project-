@@ -6,11 +6,15 @@
 
 ---
 
-## Highlights
-- Advanced itinerary planning with maps, weather & Wikipedia data  
-- Verified local guide marketplace  
-- Real-time chat & secure escrow payments  
-- Multi-city route planning with shortest path logic  
+## Problem Statement
+Travel planning today faces several critical challenges:
+- Difficulty in creating efficient and well-structured travel itineraries
+- Lack of reliable and verified local guides for travelers
+- Fragmented use of multiple platforms for planning, booking, and communication
+- Limited real-time information about weather, places, and routes
+- Poor coordination and communication between travelers and local guides
+- Manual and time-consuming trip customization processes
+These challenges result in inefficient trip planning, increased traveler uncertainty, safety concerns, and a poor overall travel experience.
 
 ---
 
@@ -139,5 +143,6 @@ http://localhost:8001
 - ML-based personalized travel recommendations
 - AI-generated smart itineraries
 - Intelligent guide & destination suggestions
+- Premimum guide options (Application , selection , booking)
 
 ---
